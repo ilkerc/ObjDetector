@@ -2,7 +2,7 @@ import numpy as np
 import theano
 import lasagne
 from lasagne import layers
-from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, TransformerLayer, ScaleLayer
+from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer
 
 try:
     from lasagne.layers.cuda_convnet import Conv2DCCLayer as Conv2DLayer
@@ -16,97 +16,56 @@ except ImportError:
     print('Using lasagne.layers (slower)')
 
 
-class Unpool2DLayer(layers.Layer):
-    """
-    This layer performs unpooling over the last two dimensions
-    of a 4D tensor.
-    """
-
-    def __init__(self, incoming, ds, **kwargs):
-
-        super(Unpool2DLayer, self).__init__(incoming, **kwargs)
-
-        if (isinstance(ds, int)):
-            raise ValueError('ds must have len == 2')
-        else:
-            ds = tuple(ds)
-            if len(ds) != 2:
-                raise ValueError('ds must have len == 2')
-            if ds[0] != ds[1]:
-                raise ValueError('ds should be symmetric (I am lazy)')
-            self.ds = ds
-
-    def get_output_shape_for(self, input_shape):
-        output_shape = list(input_shape)
-
-        output_shape[2] = input_shape[2] * self.ds[0]
-        output_shape[3] = input_shape[3] * self.ds[1]
-
-        return tuple(output_shape)
-
-    def get_output_for(self, input, **kwargs):
-        ds = self.ds
-        input_shape = input.shape
-        output_shape = self.get_output_shape_for(input_shape)
-        return input.repeat(2, axis=2).repeat(2, axis=3)
-
-
 # This builds a model of Conv. Autoencoder
-def build_cnnae_network(input_shape):
-    conv_filters = 32
+def build_cnnae_network_2(input_shape):
+
+    conv_filters = 16
     filter_size = 5
     pool_size = 2
-    encode_size = input_shape[2] * 2
+    encode_size = 512
 
-    network = InputLayer(shape=(None,
-                                input_shape[1],
-                                input_shape[2],
-                                input_shape[3]))
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
 
-    network = Conv2DLayer(network,
+    l_conv1 = Conv2DLayer(l_in,
                           num_filters=conv_filters,
                           filter_size=(filter_size, filter_size),
                           nonlinearity=None)
 
-    network = MaxPool2DLayer(network,
+    l_pool1 = MaxPool2DLayer(l_conv1,
                              pool_size=(pool_size, pool_size))
 
-    network = Conv2DLayer(network,
-                          num_filters=conv_filters,
-                          filter_size=(filter_size, filter_size),
-                          nonlinearity=None)
+    l_reshape1 = ReshapeLayer(l_pool1, shape=([0], -1))
 
-    network = MaxPool2DLayer(network,
-                             pool_size=(pool_size, pool_size))
+    l_encode = DenseLayer(l_reshape1,
+                          name='encode',
+                          num_units=encode_size)
 
-    network = ReshapeLayer(network,
-                           shape=([0], -1))
+    l_decode = DenseLayer(l_encode,
+                          W=l_encode.W.T,
+                          num_units=l_reshape1.output_shape[1])
 
-    network = DenseLayer(network,
-                         name='encode',
-                         num_units=encode_size)
+    l_reshape2 = ReshapeLayer(l_decode,
+                              shape=([0],
+                                     conv_filters, 30, 30))
 
-    network = DenseLayer(network,
-                         num_units=conv_filters * (input_shape[2] + filter_size - 1) ** 2 / 4)
+    l_unpool1 = Upscale2DLayer(l_reshape2,
+                               scale_factor=pool_size)
 
-    network = ReshapeLayer(network,
-                           shape=([0],
-                                  conv_filters,
-                                  (input_shape[2] + filter_size - 1) / 2,
-                                  (input_shape[2] + filter_size - 1) / 2))
+    l_de = TransposedConv2DLayer(l_unpool1,
+                                 num_filters=l_conv1.input_shape[1],
+                                 W=l_conv1.W,
+                                 filter_size=l_conv1.filter_size,
+                                 stride=l_conv1.stride,
+                                 crop=l_conv1.pad,
+                                 flip_filters=not l_conv1.flip_filters)
 
-    network = Unpool2DLayer(network,
-                            ds=(pool_size, pool_size))
+    l_output = ReshapeLayer(l_de,
+                            shape=([0], -1))
 
-    network = Conv2DLayer(network,
-                          num_filters=input_shape[1],
-                          filter_size=(filter_size, filter_size),
-                          nonlinearity=None)
-
-    final = ReshapeLayer(network,
-                         shape=([0], -1))
-
-    return final
+    return l_output
 
 
 # input_shape = (size, channel, width, height)
@@ -163,3 +122,55 @@ def build_st_network(input_shape):
     final = ReshapeLayer(l_trans,
                          shape=([0], -1))
     return final
+
+
+# This builds a model of Conv. Autoencoder
+def build_cnnae_network(input_shape):
+    conv_filters = 32
+    filter_size = 5
+    pool_size = 2
+    encode_size = input_shape[2] * 2
+
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
+
+    l_conv1 = Conv2DLayer(l_in,
+                          num_filters=conv_filters,
+                          filter_size=(filter_size, filter_size),
+                          nonlinearity=None)
+
+    l_pool1 = MaxPool2DLayer(l_conv1,
+                             pool_size=(pool_size, pool_size))
+
+    l_reshape1 = ReshapeLayer(l_pool1,
+                              shape=([0], -1))
+
+    l_encode = DenseLayer(l_reshape1,
+                          name='encode',
+                          num_units=encode_size)
+
+    l_decode = DenseLayer(l_encode,
+                          num_units=l_reshape1.output_shape[
+                              1])  # num_units=conv_filters * (input_shape[2] + filter_size - 1) ** 2 / 4)
+
+    l_reshape2 = ReshapeLayer(l_decode,
+                              shape=([0],
+                                     conv_filters,
+                                     (input_shape[2] - pool_size - 1) / 2,
+                                     (input_shape[2] - pool_size - 1) / 2))
+
+    l_unpool1 = Upscale2DLayer(l_reshape2,
+                               scale_factor=pool_size)
+
+    l_deconv1 = Conv2DLayer(l_unpool1,
+                            num_filters=input_shape[1],
+                            filter_size=(filter_size, filter_size),
+                            pad='full',
+                            nonlinearity=None)
+
+    l_output = ReshapeLayer(l_deconv1,
+                            shape=([0], -1))
+
+    return l_output

@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.misc import imread as imread
+import lasagne
+import nolearn.lasagne.visualize
 from itertools import product
 
 
@@ -63,3 +66,11 @@ def test_eval(eval_func, ass, shape, show_all=False):
     outputs = np.reshape(outputs, shape)
     plot_agumented_images(outputs, title='Transformed')
     plot_agumented_images(selected_imgs, title='Agumented')
+
+
+def show_network(network):
+    nolearn.lasagne.visualize.draw_to_file(lasagne.layers.get_all_layers(network),
+                                           'network.png')
+    img = imread('network.png')
+    plt.figure()
+    plt.imshow(img)
