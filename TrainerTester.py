@@ -139,5 +139,4 @@ evl_func, trn_func, ntwrk = retrain_network(agumented_samples,
                                             batch_size=agumented_samples.shape[0])
 
 # Visualize
-import nolearn.lasagne.visualize
-x = nolearn.lasagne.visualize.draw_to_file(lasagne.layers.get_all_layers(ntwrk), 'network.png')
+show_network(ntwrk)
