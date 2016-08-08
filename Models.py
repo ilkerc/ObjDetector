@@ -2,12 +2,13 @@ import numpy as np
 import theano
 import lasagne
 from lasagne import layers
-from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer
+from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer,\
+    TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer,\
+    DropoutLayer, TPSTransformerLayer
 
 try:
-    from lasagne.layers.cuda_convnet import Conv2DCCLayer as Conv2DLayer
-    from lasagne.layers.cuda_convnet import MaxPool2DCCLayer as MaxPool2DLayer
-
+    from lasagne.layers.dnn import Conv2DDNNLayer as Conv2DLayer
+    from lasagne.layers.dnn import MaxPool2DDNNLayer as MaxPool2DLayer
     print('Using cuda_convnet (faster)')
 except ImportError:
     from lasagne.layers import Conv2DLayer as Conv2DLayer
@@ -16,8 +17,55 @@ except ImportError:
     print('Using lasagne.layers (slower)')
 
 
+# Spatial Transformer Network with spline
+
+def build_st_spline_network(input_shape):
+    W = b = lasagne.init.Constant(0.0)
+    num_points = 16
+    num_filters = 32
+    filter_size = (5, 5)
+    pool_size = (2, 2)
+
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
+
+    l_conv1 = Conv2DLayer(l_in,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
+
+    l_pool1 = MaxPool2DLayer(l_conv1,
+                             pool_size=pool_size)
+
+    l_conv2 = Conv2DLayer(l_pool1,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
+
+    l_pool2 = MaxPool2DLayer(l_conv2,
+                             pool_size=pool_size)
+
+    l_dense1 = DenseLayer(l_pool2,
+                          num_units=128)
+
+    l_dense2 = DenseLayer(l_dense1,
+                          num_units=num_points*2,
+                          W=W,
+                          b=b,
+                          nonlinearity=None)
+
+    l_st = TPSTransformerLayer(l_in,
+                               l_dense2,
+                               control_points=num_points)
+
+    l_output = ReshapeLayer(l_st,
+                            shape=([0], -1))
+
+    return l_output
+
+
 # This builds a model of Conv. Autoencoder
-def build_cnnae_network_2(input_shape):
+def build_cnnae_network(input_shape):
 
     conv_filters = 16
     filter_size = 5
@@ -29,7 +77,10 @@ def build_cnnae_network_2(input_shape):
                              input_shape[2],
                              input_shape[3]))
 
-    l_conv1 = Conv2DLayer(l_in,
+    l_dropout1 = DropoutLayer(l_in,
+                              p=0.5)
+
+    l_conv1 = Conv2DLayer(l_dropout1,
                           num_filters=conv_filters,
                           filter_size=(filter_size, filter_size),
                           nonlinearity=None)
@@ -125,7 +176,7 @@ def build_st_network(input_shape):
 
 
 # This builds a model of Conv. Autoencoder
-def build_cnnae_network(input_shape):
+def build_cnnae_network_deprecated(input_shape):
     conv_filters = 32
     filter_size = 5
     pool_size = 2

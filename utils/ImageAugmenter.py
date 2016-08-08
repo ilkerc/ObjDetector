@@ -350,6 +350,7 @@ def apply_aug_matrices(images, matrices, transform_channels_equally=True,
 
     return result
 
+
 class ImageAugmenter(object):
     """Helper class to randomly augment images, usually for neural networks.
 

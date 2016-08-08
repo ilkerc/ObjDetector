@@ -74,3 +74,17 @@ def show_network(network):
     img = imread('network.png')
     plt.figure()
     plt.imshow(img)
+
+
+# This function divides the set given ratios
+def set_divider(x_set, y_set):
+    X_len = x_set.shape[0]
+    X_tr = x_set[0:int(X_len*.7)]
+    X_tst = x_set[int(X_len*.7): X_len - int(X_len*0.2)]
+    X_val = x_set[X_len - int(X_len*0.2): X_len]
+
+    Y_len = y_set.shape[0]
+    Y_tr = y_set[0:int(Y_len*.7)]
+    Y_tst = y_set[int(Y_len*.7): Y_len - int(Y_len*0.2)]
+    Y_val = y_set[Y_len - int(Y_len*0.2): Y_len]
+    return X_tr, Y_tr, X_val, Y_val, X_tst, Y_tst

@@ -1,12 +1,15 @@
 from __future__ import print_function
-import theano
-import lasagne
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import time
+import lasagne
+import theano
 import theano.tensor as T
 import numpy as np
 from utils.Augmentor import Augmentor
-from utils.utils import iterate_minibatches, plot_agumented_images, test_eval, show_network
-from Models import build_st_network, build_cnnae_network, build_cnnae_network_2
+from utils.utils import iterate_minibatches, test_eval, show_network, set_divider
+from Models import build_st_network, build_cnnae_network, build_st_spline_network
 from scipy import misc
 
 # Constants
@@ -17,67 +20,37 @@ agumented_samples = None
 original_samples = None
 
 
-def retrain_network(x_data, y_data, network, train_func, eval_func, num_epochs=100, batch_size=BATCH_SIZE):
+def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='cnn', shift_target=False):
     # Make Y a matrix
-    # y_data = np.reshape(y_data, (y_data.shape[0], -1))
-    y_data_s = np.reshape(x_data, newshape=(x_data.shape[0], -1))
-    y_data = np.roll(y_data_s, 1, axis=0)
-    # x_data_shuffled = np.random.permutation(x_data)
-    # y_data = np.reshape(x_data_shuffled, newshape=(y_data.shape[0], -1))
-
-    # Get params from the network
-    params = lasagne.layers.get_all_params(network, trainable=True)
-    print("Model is ready for training")
-
-    # Trainer Function and Variable Holders
-    X = T.tensor4(dtype=theano.config.floatX)
-    Y = T.matrix(dtype=theano.config.floatX)
-
-    # Training Iterator
-    print("Training Is About to Start")
-    try:
-        for epoch in range(num_epochs):
-            # In each epoch, we do a full pass over the training data:
-            train_err = 0
-            train_batches = 0
-            #  lr_for_epoch = base_lr * (decay_lr ** epoch)
-            for batch in iterate_minibatches(x_data, y_data, batch_size, shuffle=False):
-                inputs, targets = batch
-                train_err += train_func(inputs, targets)[0]
-                train_batches += 1
-            print("Epoch {0}: Train cost {1}".format(epoch, train_err))
-    except KeyboardInterrupt:
-        pass
-    print("Completed, saved")
-    return eval_func, train_func, network
-
-
-def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='cnn'):
-    # Make Y a matrix
-    # y_data = np.reshape(y_data, (y_data.shape[0], -1))
-    y_data_s = np.reshape(x_data, newshape=(x_data.shape[0], -1))
-    y_data = np.roll(y_data_s, 1, axis=0)
-    # x_data_shuffled = np.random.permutation(x_data)
-    # y_data = np.reshape(x_data_shuffled, newshape=(y_data.shape[0], -1))
+    X_tr, Y_tr, X_val, Y_val, X_tst, Y_tst = set_divider(x_data, y_data)
+    if shift_target:
+        Y_tr = np.random.permutation(np.reshape(X_tr, (X_tr.shape[0], -1)))
+        Y_tst = np.random.permutation(np.reshape(X_tst, (X_tst.shape[0], -1)))
+        Y_val = np.random.permutation(np.reshape(X_val, (X_val.shape[0], -1)))
+    else:
+        Y_val = np.reshape(Y_val, (Y_val.shape[0], -1))
+        Y_tst = np.reshape(Y_tst, (Y_tst.shape[0], -1))
+        Y_tr = np.reshape(Y_tr, (Y_tr.shape[0], -1))
 
     # Building the model
     if model == 'cnn':
-        network = build_cnnae_network_2(x_data.shape)
+        network = build_cnnae_network(X_tr.shape)
+    elif model == 'st':
+        network = build_st_network(X_tr.shape)
+    elif model == 'st_sp':
+        network = build_st_spline_network(X_tr.shape)
     else:
-        network = build_st_network(x_data.shape)
+        print("No such Model")
+        return
 
     params = lasagne.layers.get_all_params(network, trainable=True)
     print("Model is ready for training")
 
     # Trainer Function and Variable Holders
-    X = T.tensor4(dtype=theano.config.floatX)
-    Y = T.matrix(dtype=theano.config.floatX)
-    # Adaptive Learning Rate
-    # learning_rate = T.scalar('learning_rate', dtype=theano.config.floatX)
-    # base_lr = 0.08
-    # decay_lr = 0.95
+    X = T.tensor4('inputs', dtype=theano.config.floatX)
+    Y = T.matrix('targets', dtype=theano.config.floatX)
 
-    # Functions
+    # Train Functions
     output = lasagne.layers.get_output(network, X, deterministic=False)
     cost = T.mean(lasagne.objectives.squared_error(output, Y))
     updates = lasagne.updates.nesterov_momentum(
@@ -85,23 +58,55 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
     eval_func = theano.function([X], [output], allow_input_downcast=True)
 
-    # Training Iterator
+    # Test Functions
+    test_prediction = lasagne.layers.get_output(network, X, deterministic=True)
+    test_loss = T.mean(lasagne.objectives.squared_error(test_prediction, Y))
+    test_func = theano.function([X, Y], [test_loss], allow_input_downcast=True)
+
+    # Training, Validating Iterator
     print("Training Is About to Start")
     try:
         for epoch in range(num_epochs):
-            # In each epoch, we do a full pass over the training data:
+            # Training
             train_err = 0
             train_batches = 0
-            #  lr_for_epoch = base_lr * (decay_lr ** epoch)
-            for batch in iterate_minibatches(x_data, y_data, batch_size, shuffle=True):
+            start_time = time.time()
+            for batch in iterate_minibatches(X_tr, Y_tr, batch_size, shuffle=True):
                 inputs, targets = batch
                 train_err += train_func(inputs, targets)[0]
                 train_batches += 1
-            print("Epoch {0}: Train cost {1}".format(epoch, train_err))
+
+            # Validation
+            val_err = 0
+            val_batches = 0
+            for batch in iterate_minibatches(X_val, Y_val, batch_size, shuffle=False):
+                inputs, targets = batch
+                err = test_func(inputs, targets)
+                val_err += err[0]
+                val_batches += 1
+
+            # Print Results
+            print("Epoch {} of {} took {:.3f}s".format(
+                epoch + 1, num_epochs, time.time() - start_time))
+            print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
+            print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
+
     except KeyboardInterrupt:
+        print("Training is interrupted")
         pass
     print("Completed, saved")
-    # np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
+    # After training, we compute and print the test error:
+    test_err = 0
+    test_batches = 0
+    for batch in iterate_minibatches(X_tst, Y_tst, batch_size, shuffle=False):
+        inputs, targets = batch
+        err = test_func(inputs, targets)
+        test_err += err[0]
+        test_batches += 1
+    print("Final results:")
+    print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
+    test_eval(eval_func, X_tst, shape=(-1, X_tst.shape[1], WINDOW_SIZE, WINDOW_SIZE), show_all=True)
+    plt.show()
     return eval_func, train_func, network
 
 
@@ -115,28 +120,26 @@ def selected_callback(os, ass):
 
 
 # Main Run
-path = '/Users/ilker/Desktop/me.png'
+lasagne.random.set_rng(np.random.RandomState(1234))  # Set random state so we can investigate results
+path = '../me.png'
+coords = {'leye': (420, 402),
+          'reye': (575, 443),
+          'hpho': (360, 879)}
 img = misc.imread(path, flatten=False)  # Set flatten true if working w/ gray i mages
-img = img[:, :, :3] / 255.  # Just in case if the image has more then 3 channels like alpha
-a = Augmentor(selected_callback, img_data=img, window_size=WINDOW_SIZE, degree_range=(-45, 45), d_step=1)
-plt.imshow(img)
-plt.show()
+img = img[:, :, :3]  # Just in case if the image has more then 3 channels like alpha
+aug_count = 1000
+a = Augmentor(selected_callback, img_data=img, window_size=WINDOW_SIZE, count=aug_count)
+Ys, Xs = a.manuel(coords['leye'])
 
-evl_func, trn_func, ntwrk = train_network(agumented_samples,
-                                          original_samples,
-                                          num_epochs=50,
-                                          batch_size=5,
-                                          model='cnn')
+evl_func, trn_func, ntwrk = train_network(Xs,
+                                          Ys,
+                                          num_epochs=100,
+                                          batch_size=1,
+                                          model='st_sp',
+                                          shift_target=False)
 
-test_eval(evl_func, agumented_samples, shape=(-1, img.shape[2], WINDOW_SIZE, WINDOW_SIZE), show_all=True)
-
-evl_func, trn_func, ntwrk = retrain_network(agumented_samples,
-                                            original_samples,
-                                            ntwrk,
-                                            trn_func,
-                                            evl_func,
-                                            num_epochs=50,
-                                            batch_size=agumented_samples.shape[0])
+X_tst = set_divider(Xs, Ys)[4]  # Get the test data for a hones test :)
+test_eval(evl_func, X_tst, shape=(-1, img.shape[2], WINDOW_SIZE, WINDOW_SIZE), show_all=True)
 
 # Visualize
-show_network(ntwrk)
+# show_network(ntwrk)
