@@ -1,6 +1,7 @@
 import numpy as np
 import theano
 import lasagne
+import theano.tensor as T
 from lasagne import layers
 from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer,\
     TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer,\
@@ -13,17 +14,15 @@ try:
 except ImportError:
     from lasagne.layers import Conv2DLayer as Conv2DLayer
     from lasagne.layers import MaxPool2DLayer as MaxPool2DLayer
-
     print('Using lasagne.layers (slower)')
 
 
 # Spatial Transformer Network with spline
-
 def build_st_spline_network(input_shape):
     W = b = lasagne.init.Constant(0.0)
     num_points = 16
-    num_filters = 32
-    filter_size = (5, 5)
+    num_filters = 64
+    filter_size = (3, 3)
     pool_size = (2, 2)
 
     l_in = InputLayer(shape=(None,
@@ -70,7 +69,7 @@ def build_cnnae_network(input_shape):
     conv_filters = 16
     filter_size = 5
     pool_size = 2
-    encode_size = 512
+    encode_size = input_shape[2] * 2
 
     l_in = InputLayer(shape=(None,
                              input_shape[1],
@@ -100,7 +99,9 @@ def build_cnnae_network(input_shape):
 
     l_reshape2 = ReshapeLayer(l_decode,
                               shape=([0],
-                                     conv_filters, 30, 30))
+                                     conv_filters,
+                                     int(np.sqrt(l_reshape1.output_shape[1] / conv_filters)),
+                                     int(np.sqrt(l_reshape1.output_shape[1] / conv_filters))))
 
     l_unpool1 = Upscale2DLayer(l_reshape2,
                                scale_factor=pool_size)
@@ -122,7 +123,9 @@ def build_cnnae_network(input_shape):
 # input_shape = (size, channel, width, height)
 def build_st_network(input_shape):
     # General Params
-    ini = lasagne.init.HeUniform()
+    num_filters = 64
+    filter_size = (3, 3)
+    pool_size = (2, 2)
 
     # SP Param
     b = np.zeros((2, 3), dtype=theano.config.floatX)
@@ -131,29 +134,26 @@ def build_st_network(input_shape):
     b = b.flatten()  # identity transform
 
     # Localization Network
-    l_in = lasagne.layers.InputLayer(shape=(None, input_shape[1], input_shape[2], input_shape[3]))
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
 
-    l_loc = lasagne.layers.MaxPool2DLayer(l_in,
-                                          pool_size=(2, 2))
+    l_conv1 = Conv2DLayer(l_in,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
 
-    l_loc = Conv2DLayer(l_loc,
-                        num_filters=32,
-                        filter_size=(5, 5),
-                        stride=2,
-                        W=ini)
-    l_loc = MaxPool2DLayer(l_loc,
-                           pool_size=(2, 2))
+    l_pool1 = MaxPool2DLayer(l_conv1,
+                             pool_size=pool_size)
 
-    l_loc = Conv2DLayer(l_loc,
-                        num_filters=64,
-                        filter_size=(5, 5),
-                        stride=2,
-                        W=ini)
+    l_conv2 = Conv2DLayer(l_pool1,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
 
-    l_loc = MaxPool2DLayer(l_loc,
-                           pool_size=(2, 2))
+    l_pool2 = MaxPool2DLayer(l_conv2,
+                             pool_size=pool_size)
 
-    l_loc = DenseLayer(l_loc,
+    l_loc = DenseLayer(l_pool2,
                        num_units=64,
                        W=lasagne.init.HeUniform('relu'))
 

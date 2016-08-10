@@ -6,7 +6,11 @@ from skimage.exposure import rescale_intensity
 
 
 class Augmentor(object):
-    def __init__(self, cb, img_data=None, window_size=100, degree_range=(-180, 181), d_step=1, count=100):
+    def __init__(self, cb, img_data=None,
+                 window_size=100,
+                 degree_range=(-180, 181),
+                 d_step=1,
+                 count=100):
         self.ax = gca()
         self.cb = cb
         self.img_data = img_data
@@ -17,7 +21,7 @@ class Augmentor(object):
         self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
 
     @staticmethod
-    def augmentor(h, w, img, count):
+    def augmentor(h, w, img, count, scale_factor=1.0):
         agu = ImageAugmenter(img_height_px=img.shape[0],
                              img_width_px=img.shape[1],
                              scale_to_percent=1.2,

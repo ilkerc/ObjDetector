@@ -1,9 +1,11 @@
 import numpy as np
+import theano.tensor as T
 import matplotlib.pyplot as plt
 from scipy.misc import imread as imread
 import lasagne
 import nolearn.lasagne.visualize
 from itertools import product
+from skimage import transform as tf
 
 
 # Plots img array with shape (imgs, channel, width, height)
@@ -65,7 +67,7 @@ def test_eval(eval_func, ass, shape, show_all=False):
     outputs = outputs[0][:]
     outputs = np.reshape(outputs, shape)
     plot_agumented_images(outputs, title='Transformed')
-    plot_agumented_images(selected_imgs, title='Agumented')
+    plot_agumented_images(selected_imgs, title='Augmented')
 
 
 def show_network(network):
@@ -88,3 +90,34 @@ def set_divider(x_set, y_set):
     Y_tst = y_set[int(Y_len*.7): Y_len - int(Y_len*0.2)]
     Y_val = y_set[Y_len - int(Y_len*0.2): Y_len]
     return X_tr, Y_tr, X_val, Y_val, X_tst, Y_tst
+
+
+# Resizer
+def rescaler(Xs, Ys, rescale_factor):
+    Xs = np.asarray([tf.rescale(np.transpose(Xs[i], (2, 1, 0)), scale=rescale_factor) for i in range(0, Xs.shape[0])])
+    Xs = Xs.transpose((0, 3, 2, 1))
+    Ys = np.asarray([tf.rescale(np.transpose(Ys[i], (2, 1, 0)), scale=rescale_factor) for i in range(0, Ys.shape[0])])
+    Ys = Ys.transpose((0, 3, 2, 1))
+    return Ys, Xs
+
+
+# Reconstruction error
+def compute_reconstruction_error(inputs, targets, outputs):
+    """
+    This function computes the reconstruction error.
+    Metric 1 : Root squared structural transformation error : Each inputs distance to the target
+    (targets are assumed to be fixed) will be calculated & summed. The final value is the mean of this summation
+
+    Metric 2 : Root mean squared Regression error : Each outputs distance to the target will be calculated & summed.
+    The final value is the mean of this summation.
+
+    :param inputs: The augmented samples 4D Tensor
+    :param targets: The target (un transformed image) 4D Tensor, the size equals to inputs, but all the same
+    :param outputs: The output of the network (regression result) 4D tensort
+    :return: reconstruction error
+    """
+    # Make input also linear so element wise division can be performed
+    inputs_res = T.reshape(inputs, (inputs.shape[0], -1))
+    mu_m1 = T.sqrt((inputs_res - targets)**2).mean()
+    mu_m2 = T.sqrt((outputs - targets)**2).mean()
+    return mu_m1 * mu_m2
