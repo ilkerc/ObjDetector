@@ -113,7 +113,7 @@ def compute_reconstruction_error(inputs, targets, outputs):
     The final value is the mean of this summation.
 
     :param inputs: The augmented samples 4D Tensor
-    :param targets: The target (un transformed image) 4D Tensor, the size equals to inputs, but all the same
+    :param targets: The target (original image) 4D Tensor, the size equals to inputs, but all the same
     :param outputs: The output of the network (regression result) 4D tensort
     :return: reconstruction error
     """
