@@ -105,10 +105,11 @@ def rescaler(Xs, Ys, rescale_factor):
 def compute_reconstruction_error(inputs, targets, outputs):
     """
     This function computes the reconstruction error.
-    Metric 1 : Root squared structural transformation error : Each inputs distance to the target
+    Metric 1 : Normalized rms structural transformation error : Each inputs distance to the target
     (targets are assumed to be fixed) will be calculated & summed. The final value is the mean of this summation
+    This metric is normalized over target image
 
-    Metric 2 : Root mean squared Regression error : Each outputs distance to the target will be calculated & summed.
+    Metric 2 : Normalized rms Regression error : Each outputs distance to the target will be calculated & summed.
     The final value is the mean of this summation.
 
     :param inputs: The augmented samples 4D Tensor
@@ -118,6 +119,19 @@ def compute_reconstruction_error(inputs, targets, outputs):
     """
     # Make input also linear so element wise division can be performed
     inputs_res = T.reshape(inputs, (inputs.shape[0], -1))
-    mu_m1 = T.sqrt((inputs_res - targets)**2).mean()
-    mu_m2 = T.sqrt((outputs - targets)**2).mean()
-    return mu_m1 * mu_m2
+
+    # Metric 1
+    mu_m1 = T.sum((inputs_res - targets) ** 2)
+    mu_m1 /= targets.sum(axis=None) ** 2
+    mu_m1 = T.sqrt(mu_m1)
+
+    # Metric 2
+    mu_m2 = T.sum((outputs - targets) ** 2)
+    mu_m2 /= targets.sum(axis=None) ** 2
+    mu_m2 = T.sqrt(mu_m2)
+
+    # mu_m1 = T.mean((inputs_res - targets)**2)
+    # mu_m2 = T.mean((outputs - targets)**2)
+
+    # Ratio of two metrics, highest expectation is mu_m1
+    return mu_m2 / mu_m1

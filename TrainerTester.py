@@ -161,9 +161,9 @@ Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
 
 evl_func, trn_func, ntwrk = train_network(Xs,
                                           Ys,
-                                          num_epochs=100,
+                                          num_epochs=50,
                                           batch_size=1,
-                                          model='st',
+                                          model='cnn',
                                           shift_target=False)
 
 X_tst = set_divider(Xs, Ys)[4]  # Get the test data for a hones test :)
