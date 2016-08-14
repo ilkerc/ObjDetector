@@ -122,36 +122,3 @@ def rescaler(Xs, Ys, rescale_factor):
     Ys = np.asarray([tf.rescale(np.transpose(Ys[i], (2, 1, 0)), scale=rescale_factor) for i in range(0, Ys.shape[0])])
     Ys = Ys.transpose((0, 3, 2, 1))
     return Ys, Xs
-
-
-# Reconstruction error
-def compute_reconstruction_error(inputs, targets, outputs):
-    """
-    This function computes the reconstruction error.
-    Metric 1 : Normalized rms structural transformation error : Each inputs distance to the target
-    (targets are assumed to be fixed) will be calculated & summed. The final value is the mean of this summation
-    This metric is normalized over target image
-
-    Metric 2 : Normalized rms Regression error : Each outputs distance to the target will be calculated & summed.
-    The final value is the mean of this summation.
-
-    :param inputs: The augmented samples 4D Tensor
-    :param targets: The target (original image) 4D Tensor, the size equals to inputs, but all the same
-    :param outputs: The output of the network (regression result) 4D tensort
-    :return: reconstruction error
-    """
-    # Make input also linear so element wise division can be performed
-    inputs_res = T.reshape(inputs, (inputs.shape[0], -1))
-
-    # Metric 1
-    mu_m1 = T.sum((inputs_res - targets) ** 2)
-    mu_m1 /= targets.sum(axis=None) ** 2
-    mu_m1 = T.sqrt(mu_m1)
-
-    # Metric 2
-    mu_m2 = T.sum((outputs - targets) ** 2)
-    mu_m2 /= targets.sum(axis=None) ** 2
-    mu_m2 = T.sqrt(mu_m2)
-
-    # Ratio of two metrics, highest expectation is mu_m1
-    return mu_m2 / mu_m1

@@ -1,8 +1,9 @@
 from __future__ import print_function
 from nolearn.lasagne.visualize import plot_conv_weights
 from utils.Augmentor import Augmentor
+from utils.theano_utils import ssim, compute_reconstruction_error
 from utils.utils import iterate_minibatches, test_eval, show_network, test_histogram, \
-    rescaler, compute_reconstruction_error, plot_agumented_images, train_test_splitter
+    rescaler, plot_agumented_images, train_test_splitter
 from Models import build_st_network, build_cnnae_network, build_st_spline_network, build_cnnae_network_2conv
 from scipy import misc
 import matplotlib.pyplot as plt
@@ -58,7 +59,7 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
 
     # Train Functions
     output = lasagne.layers.get_output(network, X, deterministic=False)
-    cost = T.mean(lasagne.objectives.squared_error(output, Y))
+    cost = T.mean(lasagne.objectives.squared_error(output, Y)) + ssim(output, Y)
     updates = lasagne.updates.nesterov_momentum(
         cost, params, learning_rate=0.01, momentum=0.9)
     train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
@@ -153,7 +154,7 @@ Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
 X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
 evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist = train_network(Xs,
                                                                             Ys,
-                                                                            num_epochs=100,
+                                                                            num_epochs=400,
                                                                             batch_size=5,
                                                                             model='cnn2',
                                                                             shift_target=False)
@@ -165,7 +166,7 @@ for key, val in coords.items():
     Ys, Xs = a.manuel(val)
     Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
     X_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)[1]
-    tst_hist = test_histogram(X_tst, Y_tst, recon_func)
+    tst_hist = test_histogram(X_tst, Y_tst, tst_func)  # Y_tst -> Train targets
 
     plt.figure()
     plt.title(key + ' vs ' + root_key)
