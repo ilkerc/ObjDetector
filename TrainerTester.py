@@ -3,7 +3,7 @@ from nolearn.lasagne.visualize import plot_conv_weights
 from utils.Augmentor import Augmentor
 from utils.utils import iterate_minibatches, test_eval, show_network, test_histogram, \
     rescaler, compute_reconstruction_error, plot_agumented_images, train_test_splitter
-from Models import build_st_network, build_cnnae_network, build_st_spline_network
+from Models import build_st_network, build_cnnae_network, build_st_spline_network, build_cnnae_network_2conv
 from scipy import misc
 import matplotlib.pyplot as plt
 import time
@@ -12,6 +12,7 @@ import theano
 import theano.tensor as T
 import numpy as np
 import matplotlib
+
 matplotlib.use('TkAgg')
 
 # Constants
@@ -42,6 +43,8 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
         network = build_st_network(Xtr.shape)
     elif model == 'st_sp':
         network = build_st_spline_network(Xtr.shape)
+    elif model == 'cnn2':
+        network = build_cnnae_network_2conv(Xtr.shape)
     else:
         print("No such Model")
         return
@@ -108,7 +111,7 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     # Calculate test history
     test_hist = test_histogram(Xtst, Ytst, test_func)
 
-    return eval_func, train_func, test_func, network, test_hist
+    return eval_func, train_func, test_func, reconstruction_func, network, test_hist
 
 
 # Callback from plot click
@@ -148,12 +151,12 @@ root_key = 'leye'
 Ys, Xs = a.manuel(coords[root_key])
 Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
 X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
-evl_func, trn_func, tst_func, ntwrk, train_hist = train_network(Xs,
-                                                                Ys,
-                                                                num_epochs=50,
-                                                                batch_size=5,
-                                                                model='cnn',
-                                                                shift_target=True)
+evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist = train_network(Xs,
+                                                                            Ys,
+                                                                            num_epochs=100,
+                                                                            batch_size=5,
+                                                                            model='cnn2',
+                                                                            shift_target=False)
 
 # Plotter For test
 for key, val in coords.items():
@@ -162,7 +165,7 @@ for key, val in coords.items():
     Ys, Xs = a.manuel(val)
     Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
     X_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)[1]
-    tst_hist = test_histogram(X_tst, Y_tst, tst_func)
+    tst_hist = test_histogram(X_tst, Y_tst, recon_func)
 
     plt.figure()
     plt.title(key + ' vs ' + root_key)

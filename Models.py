@@ -3,17 +3,19 @@ import theano
 import lasagne
 import theano.tensor as T
 from lasagne import layers
-from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer,\
-    TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer,\
+from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, \
+    TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer, \
     DropoutLayer, TPSTransformerLayer
 
 try:
     from lasagne.layers.dnn import Conv2DDNNLayer as Conv2DLayer
     from lasagne.layers.dnn import MaxPool2DDNNLayer as MaxPool2DLayer
+
     print('Using cuda_convnet (faster)')
 except ImportError:
     from lasagne.layers import Conv2DLayer as Conv2DLayer
     from lasagne.layers import MaxPool2DLayer as MaxPool2DLayer
+
     print('Using lasagne.layers (slower)')
 
 
@@ -48,7 +50,7 @@ def build_st_spline_network(input_shape):
                           num_units=128)
 
     l_dense2 = DenseLayer(l_dense1,
-                          num_units=num_points*2,
+                          num_units=num_points * 2,
                           W=W,
                           b=b,
                           nonlinearity=None)
@@ -63,9 +65,8 @@ def build_st_spline_network(input_shape):
     return l_output
 
 
-# This builds a model of Conv. Autoencoder
-def build_cnnae_network(input_shape):
-
+# This builds a model of Conv. Autoencoder, Got 2 conv-deconv layers
+def build_cnnae_network_2conv(input_shape):
     conv_filters = 16
     filter_size = 3
     pool_size = 2
@@ -79,12 +80,22 @@ def build_cnnae_network(input_shape):
     l_conv1 = Conv2DLayer(l_in,
                           num_filters=conv_filters,
                           filter_size=(filter_size, filter_size),
-                          nonlinearity=None)
+                          nonlinearity=None,
+                          pad='same')
 
     l_pool1 = MaxPool2DLayer(l_conv1,
                              pool_size=(pool_size, pool_size))
 
-    l_dropout1 = DropoutLayer(l_pool1,
+    l_conv2 = Conv2DLayer(l_pool1,
+                          num_filters=conv_filters,
+                          filter_size=(filter_size, filter_size),
+                          nonlinearity=None,
+                          pad='same')
+
+    l_pool2 = MaxPool2DLayer(l_conv2,
+                             pool_size=(pool_size, pool_size))
+
+    l_dropout1 = DropoutLayer(l_pool2,
                               p=0.5)
 
     l_reshape1 = ReshapeLayer(l_dropout1, shape=([0], -1))
@@ -103,18 +114,29 @@ def build_cnnae_network(input_shape):
                                      int(np.sqrt(l_reshape1.output_shape[1] / conv_filters)),
                                      int(np.sqrt(l_reshape1.output_shape[1] / conv_filters))))
 
-    l_unpool1 = Upscale2DLayer(l_reshape2,
+    l_unpool2 = Upscale2DLayer(l_reshape2,
                                scale_factor=pool_size)
 
-    l_de = TransposedConv2DLayer(l_unpool1,
-                                 num_filters=l_conv1.input_shape[1],
-                                 W=l_conv1.W,
-                                 filter_size=l_conv1.filter_size,
-                                 stride=l_conv1.stride,
-                                 crop=l_conv1.pad,
-                                 flip_filters=not l_conv1.flip_filters)
+    l_deconv2 = TransposedConv2DLayer(l_unpool2,
+                                      num_filters=l_conv2.input_shape[1],
+                                      W=l_conv2.W,
+                                      filter_size=l_conv2.filter_size,
+                                      stride=l_conv2.stride,
+                                      crop=l_conv2.pad,
+                                      flip_filters=not l_conv2.flip_filters)
 
-    l_output = ReshapeLayer(l_de,
+    l_unpool1 = Upscale2DLayer(l_deconv2,
+                               scale_factor=pool_size)
+
+    l_deconv1 = TransposedConv2DLayer(l_unpool1,
+                                      num_filters=l_conv1.input_shape[1],
+                                      W=l_conv1.W,
+                                      filter_size=l_conv1.filter_size,
+                                      stride=l_conv1.stride,
+                                      crop=l_conv1.pad,
+                                      flip_filters=not l_conv1.flip_filters)
+
+    l_output = ReshapeLayer(l_deconv1,
                             shape=([0], -1))
 
     return l_output
@@ -172,3 +194,60 @@ def build_st_network(input_shape):
     final = ReshapeLayer(l_trans,
                          shape=([0], -1))
     return final
+
+
+# This builds a model of Conv. Autoencoder (Simple 1 layer conv-deconv)
+def build_cnnae_network(input_shape):
+
+    conv_filters = 16
+    filter_size = 3
+    pool_size = 2
+    encode_size = input_shape[2] * 2
+
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
+
+    l_conv1 = Conv2DLayer(l_in,
+                          num_filters=conv_filters,
+                          filter_size=(filter_size, filter_size),
+                          nonlinearity=None)
+
+    l_pool1 = MaxPool2DLayer(l_conv1,
+                             pool_size=(pool_size, pool_size))
+
+    l_dropout1 = DropoutLayer(l_pool1,
+                              p=0.5)
+
+    l_reshape1 = ReshapeLayer(l_dropout1, shape=([0], -1))
+
+    l_encode = DenseLayer(l_reshape1,
+                          name='encode',
+                          num_units=encode_size)
+
+    l_decode = DenseLayer(l_encode,
+                          W=l_encode.W.T,
+                          num_units=l_reshape1.output_shape[1])
+
+    l_reshape2 = ReshapeLayer(l_decode,
+                              shape=([0],
+                                     conv_filters,
+                                     int(np.sqrt(l_reshape1.output_shape[1] / conv_filters)),
+                                     int(np.sqrt(l_reshape1.output_shape[1] / conv_filters))))
+
+    l_unpool1 = Upscale2DLayer(l_reshape2,
+                               scale_factor=pool_size)
+
+    l_de = TransposedConv2DLayer(l_unpool1,
+                                 num_filters=l_conv1.input_shape[1],
+                                 W=l_conv1.W,
+                                 filter_size=l_conv1.filter_size,
+                                 stride=l_conv1.stride,
+                                 crop=l_conv1.pad,
+                                 flip_filters=not l_conv1.flip_filters)
+
+    l_output = ReshapeLayer(l_de,
+                            shape=([0], -1))
+
+    return l_output

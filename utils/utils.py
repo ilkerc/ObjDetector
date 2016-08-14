@@ -102,6 +102,7 @@ def train_test_splitter(X, Y, ratio, seed=None):
     nof_test = int(X.shape[0] * ratio)  # Number of the test size
     r_test = np.random.choice(X.shape[0], nof_test, replace=False)  # Randomly select test sets
     r_train = np.setdiff1d(np.arange(X.shape[0]), r_test)  # Finds the remaining train set indexes
+    print("{0} Samples chosen from {1} total set".format(len(r_test), X.shape[0]))
 
     # set Test Sets
     X_test = X[r_test]
@@ -113,7 +114,8 @@ def train_test_splitter(X, Y, ratio, seed=None):
 
     return X_train, X_test, Y_train, Y_test
 
-# Resizer
+
+# Given inputs and targets this method resizes them with given factor
 def rescaler(Xs, Ys, rescale_factor):
     Xs = np.asarray([tf.rescale(np.transpose(Xs[i], (2, 1, 0)), scale=rescale_factor) for i in range(0, Xs.shape[0])])
     Xs = Xs.transpose((0, 3, 2, 1))
