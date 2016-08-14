@@ -173,7 +173,7 @@ for key, val in coords.items():
     plt.plot(tst_hist, label='Eval (Unseen Samples) Error', linewidth=2.0)
     plt.plot(train_hist, label='Train (Test Samples) Error', linewidth=2.0)
     plt.legend(loc='best')
-    # plt.yscale('log')
+    plt.yscale('log')
     plt.grid(True)
     plt.show()
 
