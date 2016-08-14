@@ -20,7 +20,7 @@ except ImportError:
 # Spatial Transformer Network with spline
 def build_st_spline_network(input_shape):
     W = b = lasagne.init.Constant(0.0)
-    num_points = 16
+    num_points = 4
     num_filters = 64
     filter_size = (3, 3)
     pool_size = (2, 2)
@@ -67,7 +67,7 @@ def build_st_spline_network(input_shape):
 def build_cnnae_network(input_shape):
 
     conv_filters = 16
-    filter_size = 5
+    filter_size = 3
     pool_size = 2
     encode_size = input_shape[2] * 2
 
@@ -76,10 +76,7 @@ def build_cnnae_network(input_shape):
                              input_shape[2],
                              input_shape[3]))
 
-    l_dropout1 = DropoutLayer(l_in,
-                              p=0.5)
-
-    l_conv1 = Conv2DLayer(l_dropout1,
+    l_conv1 = Conv2DLayer(l_in,
                           num_filters=conv_filters,
                           filter_size=(filter_size, filter_size),
                           nonlinearity=None)
@@ -87,7 +84,10 @@ def build_cnnae_network(input_shape):
     l_pool1 = MaxPool2DLayer(l_conv1,
                              pool_size=(pool_size, pool_size))
 
-    l_reshape1 = ReshapeLayer(l_pool1, shape=([0], -1))
+    l_dropout1 = DropoutLayer(l_pool1,
+                              p=0.5)
+
+    l_reshape1 = ReshapeLayer(l_dropout1, shape=([0], -1))
 
     l_encode = DenseLayer(l_reshape1,
                           name='encode',
@@ -160,8 +160,7 @@ def build_st_network(input_shape):
     l_loc = DenseLayer(l_loc,
                        num_units=6,
                        b=b,
-                       W=lasagne.init.Constant(0.0),
-                       nonlinearity=lasagne.nonlinearities.identity)
+                       nonlinearity=None)
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,
@@ -173,55 +172,3 @@ def build_st_network(input_shape):
     final = ReshapeLayer(l_trans,
                          shape=([0], -1))
     return final
-
-
-# This builds a model of Conv. Autoencoder
-def build_cnnae_network_deprecated(input_shape):
-    conv_filters = 32
-    filter_size = 5
-    pool_size = 2
-    encode_size = input_shape[2] * 2
-
-    l_in = InputLayer(shape=(None,
-                             input_shape[1],
-                             input_shape[2],
-                             input_shape[3]))
-
-    l_conv1 = Conv2DLayer(l_in,
-                          num_filters=conv_filters,
-                          filter_size=(filter_size, filter_size),
-                          nonlinearity=None)
-
-    l_pool1 = MaxPool2DLayer(l_conv1,
-                             pool_size=(pool_size, pool_size))
-
-    l_reshape1 = ReshapeLayer(l_pool1,
-                              shape=([0], -1))
-
-    l_encode = DenseLayer(l_reshape1,
-                          name='encode',
-                          num_units=encode_size)
-
-    l_decode = DenseLayer(l_encode,
-                          num_units=l_reshape1.output_shape[
-                              1])  # num_units=conv_filters * (input_shape[2] + filter_size - 1) ** 2 / 4)
-
-    l_reshape2 = ReshapeLayer(l_decode,
-                              shape=([0],
-                                     conv_filters,
-                                     (input_shape[2] - pool_size - 1) / 2,
-                                     (input_shape[2] - pool_size - 1) / 2))
-
-    l_unpool1 = Upscale2DLayer(l_reshape2,
-                               scale_factor=pool_size)
-
-    l_deconv1 = Conv2DLayer(l_unpool1,
-                            num_filters=input_shape[1],
-                            filter_size=(filter_size, filter_size),
-                            pad='full',
-                            nonlinearity=None)
-
-    l_output = ReshapeLayer(l_deconv1,
-                            shape=([0], -1))
-
-    return l_output

@@ -1,16 +1,18 @@
 from __future__ import print_function
-import matplotlib
-matplotlib.use('TkAgg')
+from nolearn.lasagne.visualize import plot_conv_weights
+from utils.Augmentor import Augmentor
+from utils.utils import iterate_minibatches, test_eval, show_network, test_histogram, \
+    rescaler, compute_reconstruction_error, plot_agumented_images, train_test_splitter
+from Models import build_st_network, build_cnnae_network, build_st_spline_network
+from scipy import misc
 import matplotlib.pyplot as plt
 import time
 import lasagne
 import theano
 import theano.tensor as T
 import numpy as np
-from utils.Augmentor import Augmentor
-from utils.utils import iterate_minibatches, test_eval, show_network, set_divider, rescaler, compute_reconstruction_error
-from Models import build_st_network, build_cnnae_network, build_st_spline_network
-from scipy import misc
+import matplotlib
+matplotlib.use('TkAgg')
 
 # Constants
 BATCH_SIZE = 30
@@ -22,32 +24,24 @@ original_samples = None
 
 def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='cnn', shift_target=False):
     # Make Y a matrix
-    X_tr, Y_tr, X_val, Y_val, X_tst, Y_tst = set_divider(x_data, y_data)
+    Xtr, Xtst, Ytr, Ytst = train_test_splitter(x_data, y_data, ratio=0.2, seed=42)
 
-    # Randomly select 10 percent of inputs and assign it to targets, this may reduce overfitting
+    # Randomly select x percent of inputs and assign it to targets, this may reduce overfitting
     if shift_target:
-        r_tr = np.random.randint(0, Y_tr.shape[0], int(Y_tr.shape[0]*.5), dtype='int32')
-        r_tst = np.random.randint(0, Y_tst.shape[0], int(Y_tst.shape[0]*.5), dtype='int32')
-        r_val = np.random.randint(0, Y_val.shape[0], int(Y_val.shape[0]*.5), dtype='int32')
-        Y_tr[r_tr] = X_tr[r_tr]
-        Y_val[r_val] = X_val[r_val]
-        Y_tst[r_tst] = X_tst[r_tst]
-        # Y_tr = np.random.permutation(np.reshape(X_tr, (X_tr.shape[0], -1)))
-        # Y_tst = np.random.permutation(np.reshape(X_tst, (X_tst.shape[0], -1)))
-        # Y_val = np.random.permutation(np.reshape(X_val, (X_val.shape[0], -1)))
+        r_selected = np.random.choice(Xtr.shape[0], int(Xtr.shape[0]) * .5, replace=False)
+        Ytr[r_selected] = Xtr[r_selected]
 
     # Reshape to vector
-    Y_val = np.reshape(Y_val, (Y_val.shape[0], -1))
-    Y_tst = np.reshape(Y_tst, (Y_tst.shape[0], -1))
-    Y_tr = np.reshape(Y_tr, (Y_tr.shape[0], -1))
+    Ytst = np.reshape(Ytst, (Ytst.shape[0], -1))
+    Ytr = np.reshape(Ytr, (Ytr.shape[0], -1))
 
     # Building the model
     if model == 'cnn':
-        network = build_cnnae_network(X_tr.shape)
+        network = build_cnnae_network(Xtr.shape)
     elif model == 'st':
-        network = build_st_network(X_tr.shape)
+        network = build_st_network(Xtr.shape)
     elif model == 'st_sp':
-        network = build_st_spline_network(X_tr.shape)
+        network = build_st_spline_network(Xtr.shape)
     else:
         print("No such Model")
         return
@@ -81,31 +75,24 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
 
     # Training, Validating Iterator
     print("Training Is About to Start")
+    trn_hist = np.zeros(num_epochs)
     try:
         for epoch in range(num_epochs):
             # Training
             train_err = 0
             train_batches = 0
             start_time = time.time()
-            for batch in iterate_minibatches(X_tr, Y_tr, batch_size, shuffle=True):
+            for batch in iterate_minibatches(Xtr, Ytr, batch_size, shuffle=True):
                 inputs, targets = batch
                 train_err += train_func(inputs, targets)[0]
                 train_batches += 1
-
-            # Validation
-            val_err = 0
-            val_batches = 0
-            for batch in iterate_minibatches(X_val, Y_val, batch_size, shuffle=False):
-                inputs, targets = batch
-                err = test_func(inputs, targets)
-                val_err += err[0]
-                val_batches += 1
+                trn_hist[epoch] = train_err / train_batches
 
             # Print Results
             print("Epoch {} of {} took {:.3f}s".format(
                 epoch + 1, num_epochs, time.time() - start_time))
             print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-            print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
+            # print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
 
     except KeyboardInterrupt:
         print("Training is interrupted")
@@ -113,22 +100,15 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     print("Completed, saved")
 
     # Calculate reconstruction error
-    inputs = X_tst
-    targets = Y_tst
+    inputs = Xtst
+    targets = Ytst
     loss, reconstruction_prediction = reconstruction_func(inputs, targets)
     print("Reconstruction error : {:0}".format(float(loss)))
 
-    # # After training, we compute and print the test error:
-    # test_err = 0
-    # test_batches = 0
-    # for batch in iterate_minibatches(X_tst, Y_tst, batch_size, shuffle=False):
-    #     inputs, targets = batch
-    #     err = test_func(inputs, targets)
-    #     test_err += err[0]
-    #     test_batches += 1
-    # print("Final results:")
-    # print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
-    return eval_func, train_func, network
+    # Calculate test history
+    test_hist = test_histogram(Xtst, Ytst, test_func)
+
+    return eval_func, train_func, test_func, network, test_hist
 
 
 # Callback from plot click
@@ -141,35 +121,66 @@ def selected_callback(os, ass):
 
 
 # Main Run
-#theano.config.exception_verbosity='high'
-#theano.config.optimizer='None'
+# theano.config.exception_verbosity='high'
+# theano.config.optimizer='None'
 lasagne.random.set_rng(np.random.RandomState(1234))  # Set random state so we can investigate results
 path = '../me.png'
 coords = {'leye': (420, 402),
           'reye': (443, 575),
           'hpho': (879, 360),
-          'e1'  : (700, 100),
-          'e2'  : (500, 600),
-          'e3'  : (652, 820)}
+          'e1': (700, 100),
+          'e2': (500, 600),
+          'e3': (652, 820)}
 img = misc.imread(path, flatten=False)  # Set flatten true if working w/ gray i mages
 img = img[:, :, :3]  # Just in case if the image has more then 3 channels like alpha
-aug_count = 100
 rescale_factor = 0.25
-a = Augmentor(selected_callback, img_data=img, window_size=WINDOW_SIZE, count=aug_count)
-Ys, Xs = a.manuel(coords['leye'])
+a = Augmentor(selected_callback,
+              img_data=img,
+              window_size=WINDOW_SIZE,
+              scale_to_percent=1.2,
+              rotation_deg=(0, 360),
+              shear_deg=(-20, 20),
+              translation_x_px=5,
+              translation_y_px=5,
+              transform_channels_equally=True
+              )
+root_key = 'leye'
+Ys, Xs = a.manuel(coords[root_key])
 Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
+X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
+evl_func, trn_func, tst_func, ntwrk, train_hist = train_network(Xs,
+                                                                Ys,
+                                                                num_epochs=50,
+                                                                batch_size=5,
+                                                                model='cnn',
+                                                                shift_target=True)
 
-evl_func, trn_func, ntwrk = train_network(Xs,
-                                          Ys,
-                                          num_epochs=50,
-                                          batch_size=1,
-                                          model='cnn',
-                                          shift_target=False)
+# Plotter For test
+for key, val in coords.items():
+    if key == root_key:
+        continue
+    Ys, Xs = a.manuel(val)
+    Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
+    X_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)[1]
+    tst_hist = test_histogram(X_tst, Y_tst, tst_func)
 
-X_tst = set_divider(Xs, Ys)[4]  # Get the test data for a hones test :)
+    plt.figure()
+    plt.title(key + ' vs ' + root_key)
+    plt.plot(tst_hist, label='Eval (Unseen Samples) Error', linewidth=2.0)
+    plt.plot(train_hist, label='Train (Test Samples) Error', linewidth=2.0)
+    plt.legend(loc='best')
+    # plt.yscale('log')
+    plt.grid(True)
+    plt.show()
+
+# Visual Evaluation
 test_eval(evl_func, X_tst, shape=(-1, img.shape[2],
-                                  WINDOW_SIZE*rescale_factor,
-                                  WINDOW_SIZE*rescale_factor), show_all=True)
+                                  WINDOW_SIZE * rescale_factor,
+                                  WINDOW_SIZE * rescale_factor), show_all=False)
 
 # Visualize
 # show_network(ntwrk)
+# plot_conv_weights(lasagne.layers.get_all_layers(ntwrk)[9])
+# X_tst = set_divider(Xs, Ys)[4]  # Get the test data for a hones test :)
+# encode = lasagne.layers.get_all_layers(ntwrk)[5]
+# out = lasagne.layers.get_output(encode, inputs=X_tst).eval()

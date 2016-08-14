@@ -18,6 +18,9 @@ from __future__ import division
 from skimage import transform as tf
 import numpy as np
 import random
+import itertools
+from skimage.util import random_noise as apply_noise
+
 
 def is_minmax_tuple(param):
     """Returns whether the parameter is a tuple containing two values.
@@ -32,11 +35,13 @@ def is_minmax_tuple(param):
     """
     return type(param) is tuple and len(param) == 2
 
+
 def create_aug_matrices(nb_matrices, img_width_px, img_height_px,
                         scale_to_percent=1.0, scale_axis_equally=False,
                         rotation_deg=0, shear_deg=0,
                         translation_x_px=0, translation_y_px=0,
-                        seed=None):
+                        seed=None,
+                        ordered_translations=False):
     """Creates the augmentation matrices that may later be used to transform
     images.
 
@@ -89,11 +94,12 @@ def create_aug_matrices(nb_matrices, img_width_px, img_height_px,
         translation_y_px: Same as in ImageAugmenter.__init__().
             See translation_x_px, just for the y-axis.
         seed: Seed to use for python's and numpy's random functions.
+        ordered_translations: If true than a product of all transformation matrices are generated
 
     Returns:
         List of augmentation matrices.
     """
-    assert nb_matrices > 0
+    # assert nb_matrices > 0
     assert img_width_px > 0
     assert img_height_px > 0
     assert is_minmax_tuple(scale_to_percent) or scale_to_percent >= 1.0
@@ -120,9 +126,9 @@ def create_aug_matrices(nb_matrices, img_width_px, img_height_px,
         scale_x_min = scale_to_percent
         scale_x_max = 1.0 - (scale_to_percent - 1.0)
     assert scale_x_min > 0.0
-    #if scale_x_max >= 2.0:
+    # if scale_x_max >= 2.0:
     #     warnings.warn("Scaling by more than 100 percent (%.2f)." % (scale_x_max,))
-    scale_y_min = scale_x_min # scale_axis_equally affects the random value generation
+    scale_y_min = scale_x_min  # scale_axis_equally affects the random value generation
     scale_y_max = scale_x_max
 
     # rotation (min/max values)
@@ -158,38 +164,108 @@ def create_aug_matrices(nb_matrices, img_width_px, img_height_px,
         translation_y_px_max = translation_y_px
 
     # create nb_matrices randomized affine transformation matrices
-    for _ in range(nb_matrices):
-        # generate random values for scaling, rotation, shear, translation
-        scale_x = random.uniform(scale_x_min, scale_x_max)
-        scale_y = random.uniform(scale_y_min, scale_y_max)
-        if not scale_axis_equally:
-            scale_y = random.uniform(scale_y_min, scale_y_max)
+    if ordered_translations:
+        for _ in range(nb_matrices):
+            # generate random values for scaling, rotation, shear, translation
+            scale_x = random.uniform(scale_x_min, scale_x_max)
+            if not scale_axis_equally:
+                scale_y = random.uniform(scale_y_min, scale_y_max)
+            else:
+                scale_y = scale_x
+            rotation = np.deg2rad(random.randint(rotation_deg_min, rotation_deg_max))
+            shear = np.deg2rad(random.randint(shear_deg_min, shear_deg_max))
+            translation_x = random.randint(translation_x_px_min, translation_x_px_max)
+            translation_y = random.randint(translation_y_px_min, translation_y_px_max)
+
+            # create three affine transformation matrices
+            # 1st one moves the image to the top left, 2nd one transforms it, 3rd one
+            # moves it back to the center.
+            # The movement is neccessary, because rotation is applied to the top left
+            # and not to the image's center (same for scaling and shear).
+            matrix_to_topleft = tf.SimilarityTransform(translation=[-shift_x, -shift_y])
+            matrix_transforms = tf.AffineTransform(scale=(scale_x, scale_y),
+                                                   rotation=rotation, shear=shear,
+                                                   translation=(translation_x,
+                                                                translation_y))
+            matrix_to_center = tf.SimilarityTransform(translation=[shift_x, shift_y])
+
+            # Combine the three matrices to one affine transformation (one matrix)
+            matrix = matrix_to_topleft + matrix_transforms + matrix_to_center
+
+            # one matrix is ready, add it to the result
+            result.append(matrix.inverse)
+
+        # The else case creates a product of these matrices and it's ordered
         else:
-            scale_y = scale_x
-        rotation = np.deg2rad(random.randint(rotation_deg_min, rotation_deg_max))
-        shear = np.deg2rad(random.randint(shear_deg_min, shear_deg_max))
-        translation_x = random.randint(translation_x_px_min, translation_x_px_max)
-        translation_y = random.randint(translation_y_px_min, translation_y_px_max)
+            # 0's are concated because we also want individual translations
+            # TODO : Product can't order 0's so some portion will be unordered
+            scale_xs = np.arange(scale_x_max, scale_x_min, 0.1)
+            scale_xs = list(((float(scale_xs[i]), 0., 0., 0., 0.) for i in range(len(scale_xs))))
 
-        # create three affine transformation matrices
-        # 1st one moves the image to the top left, 2nd one transforms it, 3rd one
-        # moves it back to the center.
-        # The movement is neccessary, because rotation is applied to the top left
-        # and not to the image's center (same for scaling and shear).
-        matrix_to_topleft = tf.SimilarityTransform(translation=[-shift_x, -shift_y])
-        matrix_transforms = tf.AffineTransform(scale=(scale_x, scale_y),
-                                               rotation=rotation, shear=shear,
-                                               translation=(translation_x,
-                                                            translation_y))
-        matrix_to_center = tf.SimilarityTransform(translation=[shift_x, shift_y])
+            # scale_ys = np.arange(scale_y_max, scale_y_min, 0.1)
+            # scale_ys = list(((0., float(scale_ys[i]), 0., 0., 0., 0) for i in range(len(scale_ys))))
+            if scale_axis_equally:
+                scale_ys = scale_xs
+            rotations = np.deg2rad(np.arange(rotation_deg_min, rotation_deg_max, 0.25))
+            rotations = list(((1., float(rotations[i]), 0., 0., 0.) for i in range(len(rotations))))
 
-        # Combine the three matrices to one affine transformation (one matrix)
-        matrix = matrix_to_topleft + matrix_transforms + matrix_to_center
+            shears = np.deg2rad(np.arange(shear_deg_min, shear_deg_max, 0.25))
+            shears = list(((1., 0., float(shears[i]), 0., 0.) for i in range(len(shears))))
 
-        # one matrix is ready, add it to the result
-        result.append(matrix.inverse)
+            translations_x = np.arange(translation_x_px_min, translation_x_px_max, 0.25)
+            translations_x = list(((1., 0., 0., float(translations_x[i]), 0.) for i in range(len(translations_x))))
+
+            translations_y = np.arange(translation_y_px_min, translation_y_px_max, 0.25)
+            translations_y = list(((1., 0., 0., 0., float(translations_y[i])) for i in range(len(translations_y))))
+
+            n_of_translations = 0
+            for s_x, rot, shr, tr_x, tr_y in list(itertools.chain(scale_xs,
+                                                                  rotations,
+                                                                  shears,
+                                                                  translations_x,
+                                                                  translations_y)):
+                # Create the matrix
+                matrix_to_topleft = tf.SimilarityTransform(translation=[-shift_x, -shift_y])
+                matrix_transforms = tf.AffineTransform(scale=(s_x, s_x),
+                                                       rotation=rot, shear=shr,
+                                                       translation=(tr_x,
+                                                                    tr_y))
+                matrix_to_center = tf.SimilarityTransform(translation=[shift_x, shift_y])
+
+                # Combine the three matrices to one affine transformation (one matrix)
+                matrix = matrix_to_topleft + matrix_transforms + matrix_to_center
+                result.append(matrix.inverse)
+                n_of_translations += 1
+            print("{0} Transformations Matrixes are Generated".format(n_of_translations))
 
     return result
+
+
+def apply_aug_matrices_to_single_image(img, matrices, mode="constant",
+                                       cval=0.0, interpolation_order=1):
+    # Repeat imgs
+    nb_images = len(matrices)
+    images = np.asarray([img for _ in range(nb_images)])
+
+    result = np.zeros(images.shape, dtype=np.float32)
+
+    # iterate over every image, find out which matrix to apply and then use
+    # that matrix to augment the image
+    for idd, matrix in enumerate(matrices):
+        # we can apply the matrix to the whole numpy array of the image
+        # at the same time, so we do that to save time (instead of eg. three
+        # steps for three channels as in the else-part)
+        # TODO : Investigate the gaussian noise, what's the mean and sigma ?
+        img_noisy = np.zeros(shape=img.shape)
+        img_noisy[:, :, 0] = apply_noise(img[:, :, 0], mode='gaussian')
+        img_noisy[:, :, 1] = apply_noise(img[:, :, 1], mode='gaussian')
+        img_noisy[:, :, 2] = apply_noise(img[:, :, 2], mode='gaussian')
+        result[idd, ...] = tf.warp(img_noisy, matrix, mode=mode, cval=cval,
+                                   order=interpolation_order,
+                                   preserve_range=True)
+
+    return result
+
 
 def apply_aug_matrices(images, matrices, transform_channels_equally=True,
                        channel_is_first_axis=False, random_order=True,
@@ -251,7 +327,7 @@ def apply_aug_matrices(images, matrices, transform_channels_equally=True,
                                                    "parameter 'images'."
 
     # images must have uint8 as dtype (0-255)
-    assert images.dtype.name == "uint8", "Expected numpy.uint8 as image dtype."
+    # assert images.dtype.name == "uint8", "Expected numpy.uint8 as image dtype."
 
     # 3 axis total (2 per image) for grayscale,
     # 4 axis total (3 per image) for RGB (usually)
@@ -272,9 +348,9 @@ def apply_aug_matrices(images, matrices, transform_channels_equally=True,
     if len(images.shape) == 4:
         has_channels = True
         if channel_is_first_axis:
-            nb_channels = images.shape[1] # first axis within each image
+            nb_channels = images.shape[1]  # first axis within each image
         else:
-            nb_channels = images.shape[3] # last axis within each image
+            nb_channels = images.shape[3]  # last axis within each image
 
     # whether to apply the transformations directly to the whole image
     # array (True) or for each channel individually (False)
@@ -324,7 +400,8 @@ def apply_aug_matrices(images, matrices, transform_channels_equally=True,
             # steps for three channels as in the else-part)
             matrix = matrices[order_indices[matrix_number]]
             result[img_idx, ...] = tf.warp(image, matrix, mode=mode, cval=cval,
-                                           order=interpolation_order)
+                                           order=interpolation_order,
+                                           preserve_range=True)
             matrix_number += 1
         else:
             # we cant apply the matrix to the whole image in one step, instead
@@ -366,6 +443,7 @@ class ImageAugmenter(object):
                             translation_x_px=5)
         augmented_images = ia.augment_batch(images)
     """
+
     def __init__(self, img_width_px, img_height_px, channel_is_first_axis=False,
                  hflip=False, vflip=False,
                  scale_to_percent=1.0, scale_axis_equally=False,
@@ -511,6 +589,23 @@ class ImageAugmenter(object):
                                            seed=seed)
             self.pregenerated_matrices = matrices
 
+    # This method (added on 11 August) Creates the augmented samples via order. No randomness is applied
+    def augment_ordered(self, img, seed=None):
+        matrices = create_aug_matrices(0,
+                                       self.img_width_px,
+                                       self.img_height_px,
+                                       scale_to_percent=self.scale_to_percent,
+                                       scale_axis_equally=self.scale_axis_equally,
+                                       rotation_deg=self.rotation_deg,
+                                       shear_deg=self.shear_deg,
+                                       translation_x_px=self.translation_x_px,
+                                       translation_y_px=self.translation_y_px,
+                                       seed=seed,
+                                       ordered_translations=True)
+
+        return apply_aug_matrices_to_single_image(img, matrices,
+                                                  cval=self.cval, interpolation_order=self.interpolation_order)
+
     def augment_batch(self, images, seed=None):
         """Augments a batch of images.
 
@@ -578,7 +673,7 @@ class ImageAugmenter(object):
             # if this is simply a view, then the input array gets flipped too
             # for some reason
             images_flipped = np.copy(images)
-            #images_flipped = images.view()
+            # images_flipped = images.view()
 
             if len(shape) == 4 and self.channel_is_first_axis:
                 # roll channel to the last axis
@@ -607,9 +702,9 @@ class ImageAugmenter(object):
         # for improved performance (evade applying matrices)
         # --------------------------------
         if self.pregenerated_matrices is None \
-           and self.scale_to_percent == 1.0 and self.rotation_deg == 0 \
-           and self.shear_deg == 0 \
-           and self.translation_x_px == 0 and self.translation_y_px == 0:
+                and self.scale_to_percent == 1.0 and self.rotation_deg == 0 \
+                and self.shear_deg == 0 \
+                and self.translation_x_px == 0 and self.translation_y_px == 0:
             return np.array(images, dtype=np.float32) / 255
 
         # --------------------------------
@@ -643,7 +738,7 @@ class ImageAugmenter(object):
                                   transform_channels_equally=self.transform_channels_equally,
                                   channel_is_first_axis=self.channel_is_first_axis,
                                   cval=self.cval, interpolation_order=self.interpolation_order,
-                                  seed=seed)
+                                  seed=seed, random_order=False)
 
     def plot_image(self, image, nb_repeat=40, show_plot=True):
         """Plot augmented variations of an image.
@@ -670,7 +765,7 @@ class ImageAugmenter(object):
             images = np.resize(image, (nb_repeat, image.shape[0], image.shape[1]))
         else:
             images = np.resize(image, (nb_repeat, image.shape[0], image.shape[1],
-                               image.shape[2]))
+                                       image.shape[2]))
         return self.plot_images(images, True, show_plot=show_plot)
 
     def plot_images(self, images, augment, show_plot=True, figure=None):

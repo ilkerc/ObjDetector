@@ -24,7 +24,7 @@ def plot_agumented_images(imgs, title=''):
     for i, (r, c) in enumerate(product(range(nrows), range(ncols))):
         if i >= shape[0]:
             break
-        axes[r, c].imshow(np.transpose(imgs[i], (2, 1, 0)), cmap='gray',
+        axes[r, c].imshow(np.transpose(imgs[i], (2, 1, 0)),
                           interpolation='none')
 
 
@@ -70,6 +70,7 @@ def test_eval(eval_func, ass, shape, show_all=False):
     plot_agumented_images(selected_imgs, title='Augmented')
 
 
+# Draws graphical representation of the network, layer-by-layer
 def show_network(network):
     nolearn.lasagne.visualize.draw_to_file(lasagne.layers.get_all_layers(network),
                                            'network.png')
@@ -78,19 +79,39 @@ def show_network(network):
     plt.imshow(img)
 
 
-# This function divides the set given ratios
-def set_divider(x_set, y_set):
-    X_len = x_set.shape[0]
-    X_tr = x_set[0:int(X_len*.7)]
-    X_tst = x_set[int(X_len*.7): X_len - int(X_len*0.2)]
-    X_val = x_set[X_len - int(X_len*0.2): X_len]
+# Given test function, calculates the loss and notes down
+def test_histogram(X_tst, Y_tst, tst_func):
+    tst_len = len(X_tst)
+    tst_hist = np.zeros(tst_len)
+    for i in range(0, tst_len):
+        x = np.expand_dims(X_tst[i], axis=0)
+        if len(Y_tst.shape) == 4:
+            y = np.expand_dims(np.reshape(Y_tst[i], (-1)), axis=0)
+        else:
+            y = np.expand_dims(Y_tst[i], axis=0)
+        tst_hist[i] = tst_func(x, y)[0]
 
-    Y_len = y_set.shape[0]
-    Y_tr = y_set[0:int(Y_len*.7)]
-    Y_tst = y_set[int(Y_len*.7): Y_len - int(Y_len*0.2)]
-    Y_val = y_set[Y_len - int(Y_len*0.2): Y_len]
-    return X_tr, Y_tr, X_val, Y_val, X_tst, Y_tst
+    return tst_hist
 
+
+# Given X and Y splits the set randomly
+def train_test_splitter(X, Y, ratio, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    nof_test = int(X.shape[0] * ratio)  # Number of the test size
+    r_test = np.random.choice(X.shape[0], nof_test, replace=False)  # Randomly select test sets
+    r_train = np.setdiff1d(np.arange(X.shape[0]), r_test)  # Finds the remaining train set indexes
+
+    # set Test Sets
+    X_test = X[r_test]
+    Y_test = Y[r_test]
+
+    # set Train sets
+    X_train = X[r_train]
+    Y_train = Y[r_train]
+
+    return X_train, X_test, Y_train, Y_test
 
 # Resizer
 def rescaler(Xs, Ys, rescale_factor):
@@ -129,9 +150,6 @@ def compute_reconstruction_error(inputs, targets, outputs):
     mu_m2 = T.sum((outputs - targets) ** 2)
     mu_m2 /= targets.sum(axis=None) ** 2
     mu_m2 = T.sqrt(mu_m2)
-
-    # mu_m1 = T.mean((inputs_res - targets)**2)
-    # mu_m2 = T.mean((outputs - targets)**2)
 
     # Ratio of two metrics, highest expectation is mu_m1
     return mu_m2 / mu_m1
