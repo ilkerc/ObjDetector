@@ -19,6 +19,71 @@ except ImportError:
     print('Using lasagne.layers (slower)')
 
 
+def build_mitosis_encoder(input_shape, encoding_size=32, withst=False):
+    # Parameters
+    filter_size = (3, 3)
+    num_filters = 32
+    pool_size = (2, 2)
+
+    # Localization Network
+
+    l_input = InputLayer(shape=(None, input_shape[1], input_shape[2], input_shape[3]))
+    l_conv1 = Conv2DLayer(l_input, num_filters=num_filters, filter_size=filter_size)
+    l_conv2 = Conv2DLayer(l_conv1, num_filters=num_filters, filter_size=filter_size)
+    l_pool1 = MaxPool2DLayer(l_conv2, pool_size=pool_size)
+    l_pipe1_layer = l_pool1  # We need this
+
+    # ST Network
+    if withst:
+        # ST Params
+        b = np.zeros((2, 3), dtype=theano.config.floatX)
+        b[0, 0] = 1
+        b[1, 1] = 1
+        b = b.flatten()
+
+        # ST Layers
+        st_encode1 = DenseLayer(l_pool1, num_units=50, W=lasagne.init.HeUniform('relu'))
+        st_encode2 = DenseLayer(st_encode1, num_units=6, b=b, W=lasagne.init.Constant(0.0))
+        l_trans1 = TransformerLayer(l_input, st_encode2, downsample_factor=1.0)
+
+        # Localization Network
+
+        st_conv1 = Conv2DLayer(l_trans1, num_filters=num_filters, filter_size=filter_size)
+        st_covn2 = Conv2DLayer(st_conv1, num_filters=num_filters, filter_size=filter_size)
+        st_pool1 = MaxPool2DLayer(st_covn2, pool_size=pool_size)
+        l_pipe1_layer = st_pool1
+
+    # Encoding Step
+    l_reshape1 = ReshapeLayer(l_pipe1_layer, shape=([0], -1))
+    l_encode = DenseLayer(l_reshape1, num_units=encoding_size, W=lasagne.init.HeUniform('relu'), name='encoder')
+
+    # Decoding Step
+    l_decode = DenseLayer(l_encode, W=l_encode.W.T, num_units=l_reshape1.output_shape[1])
+    l_reshape2 = ReshapeLayer(l_decode, shape=([0], num_filters,
+                                               int(np.sqrt(l_reshape1.output_shape[1] / num_filters)),
+                                               int(np.sqrt(l_reshape1.output_shape[1] / num_filters))))
+
+    # Deconv Network
+    l_unpool1 = Upscale2DLayer(l_reshape2, scale_factor=pool_size)
+    l_deconv2 = TransposedConv2DLayer(l_unpool1,
+                                      num_filters=l_conv2.input_shape[1],
+                                      W=l_conv2.W,
+                                      filter_size=l_conv2.filter_size,
+                                      stride=l_conv2.stride,
+                                      crop=l_conv2.pad,
+                                      flip_filters=not l_conv2.flip_filters)
+
+    l_deconv1 = TransposedConv2DLayer(l_deconv2,
+                                      num_filters=l_conv1.input_shape[1],
+                                      W=l_conv1.W,
+                                      filter_size=l_conv1.filter_size,
+                                      stride=l_conv1.stride,
+                                      crop=l_conv1.pad,
+                                      flip_filters=not l_conv1.flip_filters)
+
+    return l_deconv1
+
+
 # Spatial Transformer Network with spline
 def build_st_spline_network(input_shape):
     W = b = lasagne.init.Constant(0.0)

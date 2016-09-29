@@ -1,4 +1,3 @@
-from __future__ import print_function
 from nolearn.lasagne.visualize import plot_conv_weights
 from utils.Augmentor import Augmentor
 from utils.theano_utils import ssim, compute_reconstruction_error
