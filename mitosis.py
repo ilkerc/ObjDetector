@@ -1,5 +1,4 @@
-from utils.utils import iterate_minibatches, test_eval, show_network, test_histogram, \
-    rescaler, plot_agumented_images, train_test_splitter
+from utils.utils import iterate_minibatches
 from Models import build_mitosis_encoder
 from sampleFactory import generateSamples
 import lasagne
@@ -8,17 +7,15 @@ import time
 import theano.tensor as T
 import numpy as np
 
-# TODO : Regularisation is missing
-
 # Params
 num_epochs = 500
 use_class = 1  # 1 is for mitosis
 aug_sample = 50
-batch_size = 1
-encode_size = 50
-use_st = False
-regularize = False
-reg_weight = 0.001
+batch_size = 5
+encode_size = 100
+use_st = True
+regularize = True
+reg_weight = 0.0005
 
 # Import The Data
 samples_path_x = '/home/ilker/bap/mitosis/OriginalSampleX.npy'
@@ -50,7 +47,7 @@ if regularize:
     l2_penalty = lasagne.regularization.regularize_layer_params(all_layers, lasagne.regularization.l2) * reg_weight
     cost += l2_penalty
 
-updates = lasagne.updates.nesterov_momentum(cost, params, learning_rate=0.01, momentum=0.9)
+updates = lasagne.updates.nesterov_momentum(cost, params, learning_rate=0.05, momentum=0.9)
 train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
 encode_func = theano.function([X], [encoder], allow_input_downcast=True)
 eval_func = theano.function([X], [output], allow_input_downcast=True)
@@ -60,6 +57,10 @@ print("Training Is About to Start")
 trn_hist = np.zeros(num_epochs)
 try:
     for epoch in range(num_epochs):
+        # Save the model
+        if epoch % 20 == 0:
+            np.savez('model_' + str(epoch) + '.npz', *lasagne.layers.get_all_param_values(network))
+
         # Training
         train_err = 0
         train_batches = 0
@@ -78,5 +79,31 @@ try:
 
 except KeyboardInterrupt:
     print("Training is interrupted")
+    np.savez('model_' + str(epoch) + '.npz', *lasagne.layers.get_all_param_values(network))
     pass
 print("Completed, saved")
+
+
+"""
+Testing After Here
+Assuming that the code blocks that builds the model has already been executed
+
+
+# Load Test Data
+
+# Restore params
+with np.load('model_26.npz') as f:
+    param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+lasagne.layers.set_all_param_values(network, param_values)
+
+# Test 1 -> Encoded Features
+one_img = Xs[0]
+encoded_feas = encode_func(np.expand_dims(one_img, axis=0))
+encoded_feas = np.asarray(encoded_feas).flatten()
+
+# Test 2 -> Get output
+one_img = Xs[0]
+out_out = eval_func(np.expand_dims(one_img, axis=0))
+out_out = np.asarray(out_out).squeeze().transpose()
+
+"""
