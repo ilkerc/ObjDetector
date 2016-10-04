@@ -24,7 +24,6 @@ def build_mitosis_encoder(input_shape, encoding_size=32, withst=False):
     filter_size = (3, 3)
     num_filters = 32
     pool_size = (2, 2)
-
     # Localization Network
 
     l_input = InputLayer(shape=(None, input_shape[1], input_shape[2], input_shape[3]))
@@ -247,7 +246,9 @@ def build_st_network(input_shape):
     l_loc = DenseLayer(l_loc,
                        num_units=6,
                        b=b,
-                       nonlinearity=None)
+                       nonlinearity=lasagne.nonlinearities.linear,
+                       W=lasagne.init.Constant(0.0),
+                       name='param_regressor')
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,

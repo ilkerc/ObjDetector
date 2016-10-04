@@ -61,7 +61,13 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     cost = T.mean(lasagne.objectives.squared_error(output, Y)) + ssim(output, Y)
     updates = lasagne.updates.nesterov_momentum(
         cost, params, learning_rate=0.01, momentum=0.9)
-    train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
+    if model == 'st':
+        l_paramreg = next(l for l in lasagne.layers.get_all_layers(network) if l.name is 'param_regressor')
+        l_paramreg_params = lasagne.layers.get_output(l_paramreg, X, deterministic=False)
+        train_func = theano.function([X, Y], [cost, output, l_paramreg_params], updates=updates, allow_input_downcast=True)
+    else:
+        train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
+
     eval_func = theano.function([X], [output], allow_input_downcast=True)
 
     # Test Functions
@@ -87,7 +93,10 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
             start_time = time.time()
             for batch in iterate_minibatches(Xtr, Ytr, batch_size, shuffle=True):
                 inputs, targets = batch
-                train_err += train_func(inputs, targets)[0]
+                results = train_func(inputs, targets)
+                train_err += results[0]
+                reg_params = results[2]
+                print(reg_params)
                 train_batches += 1
                 trn_hist[epoch] = train_err / train_batches
 
@@ -136,7 +145,7 @@ coords = {'leye': (420, 402),
           'e3': (652, 820)}
 img = misc.imread(path, flatten=False)  # Set flatten true if working w/ gray i mages
 img = img[:, :, :3]  # Just in case if the image has more then 3 channels like alpha
-rescale_factor = 0.25
+rescale_factor = 0.5
 a = Augmentor(selected_callback,
               img_data=img,
               window_size=WINDOW_SIZE,
@@ -153,9 +162,9 @@ Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
 X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
 evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist = train_network(Xs,
                                                                             Ys,
-                                                                            num_epochs=400,
+                                                                            num_epochs=100,
                                                                             batch_size=5,
-                                                                            model='cnn2',
+                                                                            model='st',
                                                                             shift_target=False)
 
 # Plotter For test
