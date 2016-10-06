@@ -1,6 +1,7 @@
 import numpy as np
 import theano
 import lasagne
+import DiscreteLayer
 import theano.tensor as T
 from lasagne import layers
 from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, \
@@ -243,6 +244,8 @@ def build_st_network(input_shape):
                        num_units=64,
                        W=lasagne.init.HeUniform('relu'))
 
+    l_disc = DiscreteLayer()
+
     l_loc = DenseLayer(l_loc,
                        num_units=6,
                        b=b,
@@ -251,7 +254,8 @@ def build_st_network(input_shape):
                        name='param_regressor')
 
     # Transformer Network
-    l_trans = TransformerLayer(l_in,
+    l_trans = Transfo
+    rmerLayer(l_in,
                                l_loc,
                                downsample_factor=1.0)
 

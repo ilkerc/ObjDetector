@@ -10,7 +10,7 @@ import numpy as np
 # Params
 num_epochs = 500
 use_class = 1  # 1 is for mitosis
-aug_sample = 50
+aug_sample = 5
 batch_size = 5
 encode_size = 100
 use_st = True

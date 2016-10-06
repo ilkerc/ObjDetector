@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import misc
+import matplotlib.image as mpimg
 
 
 def transform(image, theta):
@@ -13,8 +13,10 @@ def transform(image, theta):
     grid = meshgrid(out_height, out_width)
 
     T_g = np.dot(theta, grid)
-    x_s_flatten = T_g[:, 0].flatten()
-    y_s_flatten = T_g[:, 1].flatten()
+    x_s = T_g[:, 0]
+    y_s = T_g[:, 1]
+    x_s_flatten = x_s.flatten()
+    y_s_flatten = y_s.flatten()
 
     input_dim = np.transpose(image, (0, 2, 3, 1))
     input_transformed = interpolate(input_dim, x_s_flatten, y_s_flatten, out_height, out_width)
@@ -22,8 +24,8 @@ def transform(image, theta):
 
 
 def meshgrid(height, width):
-    x_t, y_t = np.meshgrid(np.linspace(-1, 1, width),
-                           np.linspace(-1, 1, height))
+    x_t, y_t = np.meshgrid(np.linspace(0, width, width),
+                           np.linspace(0, height, height))
     ones = np.ones(np.prod(x_t.shape))
     grid = np.vstack([x_t.flatten(), y_t.flatten(), ones])
     return grid
@@ -83,6 +85,19 @@ def interpolate(im, x, y, out_height, out_width):
     output = np.sum([wa * Ia, wb * Ib, wc * Ic, wd * Id], axis=0)
     return output
 
-the = [1, 0, 0, 0, 1, 0]
-img = misc.imread('/home/ilker/Desktop/img.jpg', flatten=False)
+"""
+Test With Array =
+m = np.zeros((100, 100, 3), float)
+m.fill(0)
+np.fill_diagonal(m[:,:,0], 120)
+np.fill_diagonal(m[:,:,1], 120)
+np.fill_diagonal(m[:,:,2], 120)
+img = m
+"""
+
+
+img = mpimg.imread('/home/ilker/Desktop/img2.jpg')
+the = np.array([1, 0, 0, 0, 1, 0])
 transformed = transform(img, the)
+plt.figure(); plt.imshow(img, interpolation="nearest")
+plt.figure(); plt.imshow(transformed, interpolation="nearest")
