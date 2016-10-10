@@ -11,9 +11,11 @@ import lasagne
 import theano
 import theano.tensor as T
 import numpy as np
+import ipdb
+
 import matplotlib
 
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 
 # Constants
 BATCH_SIZE = 30
@@ -51,6 +53,7 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
 
     params = lasagne.layers.get_all_params(network, trainable=True)
     print("Model is ready for training")
+    ipdb.set_trace()
 
     # Trainer Function and Variable Holders
     X = T.tensor4('inputs', dtype=theano.config.floatX)
@@ -64,7 +67,11 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     if model == 'st':
         l_paramreg = next(l for l in lasagne.layers.get_all_layers(network) if l.name is 'param_regressor')
         l_paramreg_params = lasagne.layers.get_output(l_paramreg, X, deterministic=False)
-        train_func = theano.function([X, Y], [cost, output, l_paramreg_params], updates=updates, allow_input_downcast=True)
+        l_param_W = l_paramreg.get_params()[0]
+        l_param_B = l_paramreg.get_params()[1]
+        train_func = theano.function([X, Y], [cost, output, l_paramreg_params, l_param_W, l_param_B],
+                                     updates=updates,
+                                     allow_input_downcast=True)
     else:
         train_func = theano.function([X, Y], [cost, output], updates=updates, allow_input_downcast=True)
 
@@ -85,6 +92,9 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     # Training, Validating Iterator
     print("Training Is About to Start")
     trn_hist = np.zeros(num_epochs)
+    bias_hist = []
+    theta_hist = []
+    weight_hist = []
     try:
         for epoch in range(num_epochs):
             # Training
@@ -95,8 +105,9 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
                 inputs, targets = batch
                 results = train_func(inputs, targets)
                 train_err += results[0]
-                reg_params = results[2]
-                print(reg_params)
+                theta_hist.append(results[2])
+                weight_hist.append(results[3])
+                bias_hist.append(results[4])
                 train_batches += 1
                 trn_hist[epoch] = train_err / train_batches
 
@@ -120,7 +131,8 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     # Calculate test history
     test_hist = test_histogram(Xtst, Ytst, test_func)
 
-    return eval_func, train_func, test_func, reconstruction_func, network, test_hist
+    return eval_func, train_func, test_func, reconstruction_func, network,\
+           test_hist, bias_hist, theta_hist, weight_hist
 
 
 # Callback from plot click
@@ -160,13 +172,13 @@ root_key = 'leye'
 Ys, Xs = a.manuel(coords[root_key])
 Ys, Xs = rescaler(Xs, Ys, rescale_factor=rescale_factor)
 X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
-evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist = train_network(Xs,
+evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist, bias_hst, theta_hst, weight_hst = train_network(Xs,
                                                                             Ys,
                                                                             num_epochs=100,
-                                                                            batch_size=5,
+                                                                            batch_size=2,
                                                                             model='st',
                                                                             shift_target=False)
-
+"""
 # Plotter For test
 for key, val in coords.items():
     if key == root_key:
@@ -196,3 +208,4 @@ test_eval(evl_func, X_tst, shape=(-1, img.shape[2],
 # X_tst = set_divider(Xs, Ys)[4]  # Get the test data for a hones test :)
 # encode = lasagne.layers.get_all_layers(ntwrk)[5]
 # out = lasagne.layers.get_output(encode, inputs=X_tst).eval()
+"""

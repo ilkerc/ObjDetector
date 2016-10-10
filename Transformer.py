@@ -24,8 +24,8 @@ def transform(image, theta):
 
 
 def meshgrid(height, width):
-    x_t, y_t = np.meshgrid(np.linspace(0, width, width),
-                           np.linspace(0, height, height))
+    x_t, y_t = np.meshgrid(np.linspace(-1, 1, width),
+                           np.linspace(-1, 1, height))
     ones = np.ones(np.prod(x_t.shape))
     grid = np.vstack([x_t.flatten(), y_t.flatten(), ones])
     return grid
@@ -98,6 +98,6 @@ img = m
 
 img = mpimg.imread('/home/ilker/Desktop/img2.jpg')
 the = np.array([1, 0, 0, 0, 1, 0])
-transformed = transform(img, the)
+transformed = np.asarray(transform(img, the), dtype='uint8')
 plt.figure(); plt.imshow(img, interpolation="nearest")
 plt.figure(); plt.imshow(transformed, interpolation="nearest")

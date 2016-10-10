@@ -1,7 +1,7 @@
 import numpy as np
 import theano
 import lasagne
-import DiscreteLayer
+from DiscreteLayer import DiscreteLayer
 import theano.tensor as T
 from lasagne import layers
 from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, \
@@ -18,6 +18,17 @@ except ImportError:
     from lasagne.layers import MaxPool2DLayer as MaxPool2DLayer
 
     print('Using lasagne.layers (slower)')
+
+
+def test_model(input_shape):
+    b = np.zeros((2, 3), dtype=theano.config.floatX)
+    b[0, 0] = 1
+    b[1, 1] = 1
+    b = b.flatten()
+    l_in = InputLayer(shape=(None, input_shape[1], input_shape[2], input_shape[3]))
+    l_dense = DenseLayer(l_in, num_units=6, W=lasagne.init.Constant(0.0), b=b)
+    l_transform = TransformerLayer(l_in, l_dense, downsample_factor=1)
+    return l_transform
 
 
 def build_mitosis_encoder(input_shape, encoding_size=32, withst=False):
@@ -244,19 +255,18 @@ def build_st_network(input_shape):
                        num_units=64,
                        W=lasagne.init.HeUniform('relu'))
 
-    l_disc = DiscreteLayer()
+    l_param_reg = DenseLayer(l_loc,
+                             num_units=6,
+                             b=b,
+                             nonlinearity=lasagne.nonlinearities.linear,
+                             W=lasagne.init.Constant(0.0),
+                             name='param_regressor')
 
-    l_loc = DenseLayer(l_loc,
-                       num_units=6,
-                       b=b,
-                       nonlinearity=lasagne.nonlinearities.linear,
-                       W=lasagne.init.Constant(0.0),
-                       name='param_regressor')
+    l_dis = DiscreteLayer(l_param_reg, bin_count=(100, 100, 100, 100, 100, 100))
 
     # Transformer Network
-    l_trans = Transfo
-    rmerLayer(l_in,
-                               l_loc,
+    l_trans = TransformerLayer(l_in,
+                               l_dis,
                                downsample_factor=1.0)
 
     l_trans = ScaleLayer(l_trans)
@@ -268,7 +278,6 @@ def build_st_network(input_shape):
 
 # This builds a model of Conv. Autoencoder (Simple 1 layer conv-deconv)
 def build_cnnae_network(input_shape):
-
     conv_filters = 16
     filter_size = 3
     pool_size = 2
