@@ -53,7 +53,6 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
 
     params = lasagne.layers.get_all_params(network, trainable=True)
     print("Model is ready for training")
-    ipdb.set_trace()
 
     # Trainer Function and Variable Holders
     X = T.tensor4('inputs', dtype=theano.config.floatX)
@@ -62,9 +61,11 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     # Train Functions
     output = lasagne.layers.get_output(network, X, deterministic=False)
     cost = T.mean(lasagne.objectives.squared_error(output, Y)) + ssim(output, Y)
-    updates = lasagne.updates.nesterov_momentum(
-        cost, params, learning_rate=0.01, momentum=0.9)
-    if model == 'st':
+    #ipdb.set_trace()
+    updates = lasagne.updates.adagrad(cost, params, learning_rate=0.01)
+    #updates = lasagne.updates.nesterov_momentum(
+    #    cost, params, learning_rate=0.01, momentum=0.9)
+    if model == 'stx':
         l_paramreg = next(l for l in lasagne.layers.get_all_layers(network) if l.name is 'param_regressor')
         l_paramreg_params = lasagne.layers.get_output(l_paramreg, X, deterministic=False)
         l_param_W = l_paramreg.get_params()[0]
@@ -105,9 +106,9 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
                 inputs, targets = batch
                 results = train_func(inputs, targets)
                 train_err += results[0]
-                theta_hist.append(results[2])
-                weight_hist.append(results[3])
-                bias_hist.append(results[4])
+                #theta_hist.append(results[2])
+                #weight_hist.append(results[3])
+                #bias_hist.append(results[4])
                 train_batches += 1
                 trn_hist[epoch] = train_err / train_batches
 

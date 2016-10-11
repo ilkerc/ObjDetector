@@ -262,14 +262,12 @@ def build_st_network(input_shape):
                              W=lasagne.init.Constant(0.0),
                              name='param_regressor')
 
-    l_dis = DiscreteLayer(l_param_reg, bin_count=(100, 100, 100, 100, 100, 100))
+    l_dis = DiscreteLayer(l_param_reg)
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,
                                l_dis,
                                downsample_factor=1.0)
-
-    l_trans = ScaleLayer(l_trans)
 
     final = ReshapeLayer(l_trans,
                          shape=([0], -1))
