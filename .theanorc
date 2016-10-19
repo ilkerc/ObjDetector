@@ -1,0 +1,9 @@
+[global]
+floatX=float32
+device=gpu0
+
+[lib]
+cnmem=1
+
+[cuda]
+root=/usr/local/cuda-8.0

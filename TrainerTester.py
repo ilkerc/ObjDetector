@@ -1,19 +1,16 @@
-from nolearn.lasagne.visualize import plot_conv_weights
-from utils.Augmentor import Augmentor
-from utils.theano_utils import ssim, compute_reconstruction_error
-from utils.utils import iterate_minibatches, test_eval, show_network, test_histogram, \
-    rescaler, plot_agumented_images, train_test_splitter
-from Models import build_st_network, build_cnnae_network, build_st_spline_network, build_cnnae_network_2conv
-from scipy import misc
-import matplotlib.pyplot as plt
 import time
+
 import lasagne
+import numpy as np
 import theano
 import theano.tensor as T
-import numpy as np
-import ipdb
+from scipy import misc
 
-import matplotlib
+from Models import build_st_network, build_cnnae_network, build_st_spline_network, build_cnnae_network_2conv
+from utils.Augmentor import Augmentor
+from utils.theano_utils import ssim, compute_reconstruction_error
+from utils.utils import iterate_minibatches, test_histogram, \
+    rescaler, train_test_splitter
 
 #matplotlib.use('TkAgg')
 

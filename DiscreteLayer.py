@@ -1,35 +1,42 @@
 import lasagne
 import theano.tensor as T
 import numpy as np
-import ipdb
 import theano
 from lasagne.layers import Layer
 
 
 class DiscreteLayer(Layer):
 
-    def __init__(self, incoming, **kwargs):
+    def __init__(self, incoming, bins, **kwargs):
         super(DiscreteLayer, self).__init__(incoming, **kwargs)
+        self.bins = self.add_param(bins, bins.shape, name="bins", trainable=True)
 
     def get_output_for(self, input, deterministic=False, **kwargs):
         theta = input
-        new_theta = discrete(theta)
+        theta = T.reshape(theta, (-1, 6))  # 6 because affine has 6 parameters
+        dist = (self.bins.transpose() - theta.flatten()) ** 2
+        mins = T.argmin(dist, axis=0)
+        new_theta = self.bins[0, mins]
+        new_theta = new_theta.reshape(theta.shape)
+        new_theta = T.cast(new_theta, 'float32')
+        #up = new_theta - theta
+        #new_theta = discrete(theta, self.bins)
 
-        return new_theta
+        return lasagne.nonlinearities.linear(new_theta)
 
 
 # Discrete assignment
-def discrete(theta):
+def discrete(theta, bins):
     theta = T.reshape(theta, (-1, 6))  # 6 because affine has 6 parameters
-    bins_choose = _linspace(-3, 3, 100)
-    t_size = T.prod(theta.shape)
-    bins = T.tile(bins_choose, t_size).reshape((t_size, -1))
+    # bins_choose = _linspace(-3, 3, 100)
+    # t_size = T.prod(theta.shape)
+    # bins = T.tile(bins_choose, t_size).reshape((t_size, -1))
     dist = (bins.transpose() - theta.flatten())**2
     mins = T.argmin(dist, axis=0)
-    new_theta = bins_choose[mins]
+    new_theta = bins[0, mins]
     new_theta = new_theta.reshape(theta.shape)
     new_theta = T.cast(new_theta, 'float32')
-    return lasagne.nonlinearities.linear(new_theta)
+    return new_theta
 
 
 def _linspace(start, stop, num):

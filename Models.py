@@ -219,7 +219,12 @@ def build_cnnae_network_2conv(input_shape):
 
 
 # input_shape = (size, channel, width, height)
+
 def build_st_network(input_shape):
+    #
+    bins_choose = np.linspace(-3, 3, 100)
+    t_size = input_shape[0]*6
+    bins = np.tile(bins_choose, t_size).reshape((t_size, -1))
     # General Params
     num_filters = 64
     filter_size = (3, 3)
@@ -262,7 +267,7 @@ def build_st_network(input_shape):
                              W=lasagne.init.Constant(0.0),
                              name='param_regressor')
 
-    l_dis = DiscreteLayer(l_param_reg)
+    l_dis = DiscreteLayer(l_param_reg, bins=bins)
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,
@@ -274,7 +279,7 @@ def build_st_network(input_shape):
     return final
 
 
-# This builds a model of Conv. Autoencoder (Simple 1 layer conv-deconv)
+# Thisbuilds a model of Conv. Autoencoder (Simple 1 layer conv-deconv)
 def build_cnnae_network(input_shape):
     conv_filters = 16
     filter_size = 3
