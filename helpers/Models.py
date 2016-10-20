@@ -1,11 +1,9 @@
 import numpy as np
 import theano
 import lasagne
-from helpers.DiscreteLayer import DiscreteLayer
-import theano.tensor as T
-from lasagne import layers
+from DiscreteLayer import DiscreteLayer
 from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, \
-    TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer, \
+    TransformerLayer, Upscale2DLayer, TransposedConv2DLayer, \
     DropoutLayer, TPSTransformerLayer
 
 try:
@@ -220,9 +218,8 @@ def build_cnnae_network_2conv(input_shape):
 
 # input_shape = (size, channel, width, height)
 
-def build_st_network(b_size, bins_choose, input_shape):
-    #
-    #bins_choose = np.linspace(-1, 1, 10)
+def build_st_network(b_size, bins_choose, withdiscrete, input_shape):
+    # Discretize parameters
     t_size = b_size*6
     bins = np.tile(bins_choose, t_size).reshape((t_size, -1))
     # General Params
@@ -266,17 +263,47 @@ def build_st_network(b_size, bins_choose, input_shape):
                              nonlinearity=lasagne.nonlinearities.linear,
                              W=lasagne.init.Constant(0.0),
                              name='param_regressor')
-
-    l_dis = DiscreteLayer(l_param_reg, bins=bins)
+    if withdiscrete:
+        l_dis = DiscreteLayer(l_param_reg, bins=bins)
+    else :
+        l_dis = l_param_reg
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,
                                l_dis,
                                downsample_factor=1.0)
 
-    final = ReshapeLayer(l_trans,
-                         shape=([0], -1))
-    return final
+    # Classification Network
+    network = lasagne.layers.Conv2DLayer(
+            l_trans, num_filters=32, filter_size=(5, 5),
+            nonlinearity=lasagne.nonlinearities.rectify,
+            W=lasagne.init.GlorotUniform())
+    # Expert note: Lasagne provides alternative convolutional layers that
+    # override Theano's choice of which implementation to use; for details
+    # please see http://lasagne.readthedocs.org/en/latest/user/tutorial.html.
+
+    # Max-pooling layer of factor 2 in both dimensions:
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+    # Another convolution with 32 5x5 kernels, and another 2x2 pooling:
+    network = lasagne.layers.Conv2DLayer(
+            network, num_filters=32, filter_size=(5, 5),
+            nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+    # A fully-connected layer of 256 units with 50% dropout on its inputs:
+    network = lasagne.layers.DenseLayer(
+            lasagne.layers.dropout(network, p=.5),
+            num_units=256,
+            nonlinearity=lasagne.nonlinearities.rectify)
+
+    # And, finally, the 10-unit output layer with 50% dropout on its inputs:
+    network = lasagne.layers.DenseLayer(
+            lasagne.layers.dropout(network, p=.5),
+            num_units=10,
+            nonlinearity=lasagne.nonlinearities.softmax)
+
+    return network
 
 
 # Thisbuilds a model of Conv. Autoencoder (Simple 1 layer conv-deconv)

@@ -9,44 +9,51 @@ class DiscreteLayer(Layer):
 
     def __init__(self, incoming, bins, **kwargs):
         super(DiscreteLayer, self).__init__(incoming, **kwargs)
-        self.bins = self.add_param(bins, bins.shape, name="bins", trainable=True)
+        self.bins = self.add_param(bins, shape=bins.shape, name='bins', trainable=False)
 
-    def get_output_for(self, input, deterministic=False, **kwargs):
-        theta = input
-        theta = T.reshape(theta, (-1, 6))  # 6 because affine has 6 parameters
-        dist = self.bins.transpose() - theta.flatten()
+    def get_output_for(self, input, **kwargs):
+        if not kwargs['withdiscrete']:
+            return input
+        else:
+            theta = input
+            theta = T.reshape(theta, (-1, 6))  # 6 because affine has 6 parameters
+            dist = self.bins.transpose() - theta.flatten()
+            arg_min = T.argmin(abs(dist), axis=0)
+            arg_min_c = T.cast(arg_min, 'int32')
+            return T.reshape(self.bins[0, arg_min_c], (-1, 6))
+            return T.reshape(T.choose(arg_min, self.bins), (-1, 6))
+"""
+mins = T.min(abs(dist), axis=0)
+#mins = T.reshape(mins, (-1, 6))
 
-        mins = T.min(abs(dist), axis=0)
-        #mins = T.reshape(mins, (-1, 6))
+mins_sign = T.min(self.bins.transpose() - theta.flatten(), axis=0)
+#mins_sign = T.reshape(mins_sign, (-1, 6))
 
-        mins_sign = T.min(self.bins.transpose() - theta.flatten(), axis=0)
-        #mins_sign = T.reshape(mins_sign, (-1, 6))
-
-        diff = mins_sign - mins
-
-
-        arg_min = T.argmin(abs(dist), axis=0)
-        arg_min_c = T.cast(arg_min, 'int32')
-
-        return T.choose(arg_min_c, self.bins)
-        return T.reshape(arg_min , (-1 ,6))
-
-        theano.tensor.discrete_dtypes
-        x = mins-mins_sign
-
-        return theta - mins_sign
+diff = mins_sign - mins
 
 
+arg_min = T.argmin(abs(dist), axis=0)
+arg_min_c = T.cast(arg_min, 'int32')
+
+return T.choose(arg_min_c, self.bins)
+return T.reshape(arg_min , (-1 ,6))
+
+theano.tensor.discrete_dtypes
+x = mins-mins_sign
+
+return theta - mins_sign
 
 
-        new_theta = self.bins[0, mins]
-        new_theta = new_theta.reshape(theta.shape)
-        new_theta = T.cast(new_theta, 'float32')
-        #up = new_theta - theta
-        #new_theta = discrete(theta, self.bins)
 
-        #return lasagne.nonlinearities.linear(new_theta)
 
+new_theta = self.bins[0, mins]
+new_theta = new_theta.reshape(theta.shape)
+new_theta = T.cast(new_theta, 'float32')
+#up = new_theta - theta
+#new_theta = discrete(theta, self.bins)
+
+#return lasagne.nonlinearities.linear(new_theta)
+"""
 
 # Discrete assignment
 def discrete(theta, bins):

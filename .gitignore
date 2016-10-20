@@ -1,3 +1,6 @@
+.idea/
 *.jpg
 *.png
 *.npz
+*.pyc
+.ipynb_checkpoints/

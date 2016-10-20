@@ -5,34 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d41e7d69-b290-4668-9eef-36f831989cda" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/deployment.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/remote-mappings.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/vagrant.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/webServers.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/EncoderDetector.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/Annotate.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/cat.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/spatial2.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/spatial_test.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/temp.jpeg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/transformerlayer.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Legacy/transformtest.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Transformer.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/encoder_trainer.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/sampleFactory.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/utils/Augmentor.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/utils/ImageAugmenter.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/utils/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/utils/theano_utils.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/utils/utils.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/spatialtransformer.iml" afterPath="$PROJECT_DIR$/.idea/spatialtransformer.iml" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.ipynb_checkpoints/Untitled-checkpoint.ipynb" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.ipynb_checkpoints/Simple Network Test-checkpoint.ipynb" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/Simple Network Test-checkpoint.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DiscreteLayer.py" afterPath="$PROJECT_DIR$/DiscreteLayer.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Models.py" afterPath="$PROJECT_DIR$/Models.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Simple Network Test.ipynb" afterPath="$PROJECT_DIR$/Simple Network Test.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TrainerTester.py" afterPath="$PROJECT_DIR$/TrainerTester.py" />
     </list>
     <ignored path="ObjDetector.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -60,44 +39,53 @@
       <file leaf-file-name="TrainerTester.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TrainerTester.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="585">
-              <caret line="61" column="27" selection-start-line="61" selection-start-column="27" selection-end-line="61" selection-end-column="27" />
-              <folding />
+            <state relative-caret-position="555">
+              <caret line="79" column="4" selection-start-line="79" selection-start-column="4" selection-end-line="79" selection-end-column="79" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="updates.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/updates.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1365">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DiscreteLayer.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="DiscreteLayer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DiscreteLayer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="30" column="44" selection-start-line="30" selection-start-column="44" selection-end-line="30" selection-end-column="44" />
+            <state relative-caret-position="176">
+              <caret line="17" column="25" selection-start-line="17" selection-start-column="25" selection-end-line="17" selection-end-column="25" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Models.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Models.py">
+      <file leaf-file-name="Models.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/helpers/Models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3300">
-              <caret line="228" column="0" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
+            <state relative-caret-position="447">
+              <caret line="277" column="12" selection-start-line="277" selection-start-column="12" selection-end-line="277" selection-end-column="12" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
-                <marker date="1476877236000" expanded="true" signature="326:504" ph="..." />
-                <marker date="1476877236000" expanded="true" signature="524:690" ph="..." />
-                <marker date="1476877236000" expanded="true" signature="721:726" ph="..." />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mnist_dataset.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/helpers/mnist_dataset.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="31" column="41" selection-start-line="31" selection-start-column="41" selection-end-line="31" selection-end-column="41" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dense.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/layers/dense.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="60" column="50" selection-start-line="60" selection-start-column="38" selection-end-line="60" selection-end-column="50" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -126,9 +114,11 @@
         <option value="$PROJECT_DIR$/Transformer.py" />
         <option value="$PROJECT_DIR$/utils/WeightLogger.py" />
         <option value="$PROJECT_DIR$/.theanorc" />
-        <option value="$PROJECT_DIR$/Models.py" />
-        <option value="$PROJECT_DIR$/TrainerTester.py" />
         <option value="$PROJECT_DIR$/DiscreteLayer.py" />
+        <option value="$PROJECT_DIR$/TrainerTester.py" />
+        <option value="$PROJECT_DIR$/Models.py" />
+        <option value="$PROJECT_DIR$/helpers/mnist_dataset.py" />
+        <option value="$PROJECT_DIR$/helpers/Models.py" />
       </list>
     </option>
   </component>
@@ -139,8 +129,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="width" value="1440" />
-    <option name="height" value="900" />
+    <option name="x" value="2557" />
+    <option name="width" value="803" />
+    <option name="height" value="1080" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -170,14 +161,7 @@
       <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spatialtransformer" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
+        <subPane />
       </pane>
     </panes>
   </component>
@@ -186,6 +170,7 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="last_opened_file_path" value="$USER_HOME$/anaconda2/envs/theano/bin/python" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
+    <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
     <property name="FullScreen" value="true" />
   </component>
   <component name="RunManager" selected="Python.TrainerTester">
@@ -487,6 +472,9 @@
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="d41e7d69-b290-4668-9eef-36f831989cda" name="Default" comment="" />
@@ -555,16 +543,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <frame x="2557" y="0" width="803" height="1080" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20243205" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20243205" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3483548" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37223586" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32925585" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
@@ -608,47 +596,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="13" />
+      <option name="time" value="14" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/TrainerTester.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <marker date="1476877236000" expanded="true" signature="326:504" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="524:690" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="721:726" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <marker date="1476877236000" expanded="true" signature="326:504" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="524:690" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="721:726" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.pycharmrc" />
-    <entry file="file://$PROJECT_DIR$/sampleFactory.py" />
-    <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/numpy/lib/user_array.py" />
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/numpy/core/numerictypes.py" />
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/numpy/core/numeric.py" />
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/theano/tensor/extra_ops.py" />
@@ -692,27 +644,6 @@
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/lasagne/layers/dense.py" />
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/lasagne/layers/dnn.py" />
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/lasagne/updates.py" />
-    <entry file="file://$PROJECT_DIR$/Models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3300">
-          <caret line="228" column="0" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <marker date="1476877236000" expanded="true" signature="326:504" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="524:690" ph="..." />
-            <marker date="1476877236000" expanded="true" signature="721:726" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/TrainerTester.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="61" column="27" selection-start-line="61" selection-start-column="27" selection-end-line="61" selection-end-column="27" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda2/envs/theano/lib/python2.7/site-packages/theano/tensor/basic.py" />
     <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/updates.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -734,23 +665,92 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="363">
           <caret line="536" column="0" selection-start-line="536" selection-start-column="0" selection-end-line="536" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/layers/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-942">
+          <caret line="31" column="8" selection-start-line="31" selection-start-column="8" selection-end-line="31" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/layers/pool.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-12">
+          <caret line="421" column="6" selection-start-line="421" selection-start-column="6" selection-end-line="421" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/layers/helper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1530">
+          <caret line="111" column="4" selection-start-line="111" selection-start-column="4" selection-end-line="111" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/theano/tensor/basic.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="54" column="41" selection-start-line="54" selection-start-column="41" selection-end-line="54" selection-end-column="41" />
+        <state relative-caret-position="254">
+          <caret line="1695" column="4" selection-start-line="1695" selection-start-column="4" selection-end-line="1695" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/layers/dense.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="60" column="50" selection-start-line="60" selection-start-column="38" selection-end-line="60" selection-end-column="50" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/helpers/mnist_dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="31" column="41" selection-start-line="31" selection-start-column="41" selection-end-line="31" selection-end-column="41" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DiscreteLayer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="30" column="44" selection-start-line="30" selection-start-column="44" selection-end-line="30" selection-end-column="44" />
+        <state relative-caret-position="176">
+          <caret line="17" column="25" selection-start-line="17" selection-start-column="25" selection-end-line="17" selection-end-column="25" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TrainerTester.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="79" column="4" selection-start-line="79" selection-start-column="4" selection-end-line="79" selection-end-column="79" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="224" column="39" selection-start-line="224" selection-start-column="39" selection-end-line="224" selection-end-column="39" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/helpers/Models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="447">
+          <caret line="277" column="12" selection-start-line="277" selection-start-column="12" selection-end-line="277" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -39,7 +39,7 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     if model == 'cnn':
         network = build_cnnae_network(Xtr.shape)
     elif model == 'st':
-        network = build_st_network(Xtr.shape)
+        network = build_st_network(batch_size, Xtr.shape)
     elif model == 'st_sp':
         network = build_st_spline_network(Xtr.shape)
     elif model == 'cnn2':
@@ -56,12 +56,12 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     Y = T.matrix('targets', dtype=theano.config.floatX)
 
     # Train Functions
-    output = lasagne.layers.get_output(network, X, deterministic=False)
+    output = lasagne.layers.get_output(network, X, deterministic=False, withdiscrete=True)
+    output_cont = lasagne.layers.get_output(network, X, deterministic=False, withdiscrete=False)
     cost = T.mean(lasagne.objectives.squared_error(output, Y)) + ssim(output, Y)
-    #ipdb.set_trace()
-    updates = lasagne.updates.adagrad(cost, params, learning_rate=0.01)
-    #updates = lasagne.updates.nesterov_momentum(
-    #    cost, params, learning_rate=0.01, momentum=0.9)
+    cost_cont = T.mean(lasagne.objectives.squared_error(output_cont, Y)) + ssim(output_cont, Y)
+    updates = lasagne.updates.nesterov_momentum(
+        cost_cont, params, learning_rate=0.01, momentum=0.9)
     if model == 'stx':
         l_paramreg = next(l for l in lasagne.layers.get_all_layers(network) if l.name is 'param_regressor')
         l_paramreg_params = lasagne.layers.get_output(l_paramreg, X, deterministic=False)
@@ -76,15 +76,13 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     eval_func = theano.function([X], [output], allow_input_downcast=True)
 
     # Test Functions
-    test_prediction = lasagne.layers.get_output(network, X, deterministic=True)
-    test_loss = T.mean(lasagne.objectives.squared_error(test_prediction, Y))
+    test_loss = T.mean(lasagne.objectives.squared_error(output, Y))
     test_func = theano.function([X, Y], [test_loss], allow_input_downcast=True)
 
     # Reconstruction error Function
-    reconstruction_prediction = lasagne.layers.get_output(network, X, deterministic=True)
-    mu_loss = compute_reconstruction_error(X, Y, reconstruction_prediction)
+    mu_loss = compute_reconstruction_error(X, Y, output)
     reconstruction_func = theano.function([X, Y],
-                                          [mu_loss, reconstruction_prediction],
+                                          [mu_loss, output],
                                           allow_input_downcast=True)
 
     # Training, Validating Iterator
@@ -173,7 +171,7 @@ X_tr, X_tst, Y_tr, Y_tst = train_test_splitter(Xs, Ys, ratio=0.2, seed=42)
 evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist, bias_hst, theta_hst, weight_hst = train_network(Xs,
                                                                             Ys,
                                                                             num_epochs=100,
-                                                                            batch_size=2,
+                                                                            batch_size=1,
                                                                             model='st',
                                                                             shift_target=False)
 """
