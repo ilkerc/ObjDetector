@@ -3,4 +3,5 @@
 *.png
 *.npz
 *.pyc
+*.zip
 .ipynb_checkpoints/
