@@ -7,11 +7,11 @@ from helpers.DiscOP import DiscOP
 
 class DiscreteLayer(Layer):
 
-    def __init__(self, incoming, start=Constant(-3.), stop=Constant(3.), linrange=Constant(50.), **kwargs):
+    def __init__(self, incoming, inits, trainables, **kwargs):
         super(DiscreteLayer, self).__init__(incoming, **kwargs)
-        self.start = self.add_param(start, (1,), name='start', trainable=False)
-        self.stop = self.add_param(stop, (1,), name='stop', trainable=False)
-        self.linrange = self.add_param(linrange, (1,), name='linrange', trainable=False)
+        self.start = self.add_param(Constant(inits[0]), (1,), name='start', trainable=trainables[0])
+        self.stop = self.add_param(Constant(inits[1]), (1,), name='stop', trainable=trainables[0])
+        self.linrange = self.add_param(Constant(inits[2]), (1,), name='linrange', trainable=trainables[0])
         self.op = DiscOP()
 
     def get_output_for(self, inputs, **kwargs):
