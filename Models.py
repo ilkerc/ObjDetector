@@ -331,3 +331,88 @@ def build_cnnae_network(input_shape):
                             shape=([0], -1))
 
     return l_output
+
+def build_st_network_MNIST(b_size, input_shape, withdisc=True):
+    # General Params
+    num_filters = 64
+    filter_size = (3, 3)
+    pool_size = (2, 2)
+
+    # SP Param
+    b = np.zeros((2, 3), dtype=theano.config.floatX)
+    b[0, 0] = 1
+    b[1, 1] = 1
+    b = b.flatten()  # identity transform
+
+    # Localization Network
+    l_in = InputLayer(shape=(None,
+                             input_shape[1],
+                             input_shape[2],
+                             input_shape[3]))
+
+    l_conv1 = Conv2DLayer(l_in,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
+
+    l_pool1 = MaxPool2DLayer(l_conv1,
+                             pool_size=pool_size)
+
+    l_conv2 = Conv2DLayer(l_pool1,
+                          num_filters=num_filters,
+                          filter_size=filter_size)
+
+    l_pool2 = MaxPool2DLayer(l_conv2,
+                             pool_size=pool_size)
+
+    l_loc = DenseLayer(l_pool2,
+                       num_units=64,
+                       W=lasagne.init.HeUniform('relu'))
+
+    l_param_reg = DenseLayer(l_loc,
+                             num_units=6,
+                             b=b,
+                             nonlinearity=lasagne.nonlinearities.linear,
+                             W=lasagne.init.Constant(0.0),
+                             name='param_regressor')
+
+    if withdisc:
+        l_dis = DiscreteLayer(l_param_reg, start=Constant(-3.), stop=Constant(3.), linrange=Constant(50.))
+    else:
+        l_dis = l_param_reg
+
+    # Transformer Network
+    l_trans = TransformerLayer(l_in,
+                               l_dis,
+                               downsample_factor=1.0)
+
+    # Classification Network
+    network = lasagne.layers.Conv2DLayer(
+            l_trans, num_filters=32, filter_size=(5, 5),
+            nonlinearity=lasagne.nonlinearities.rectify,
+            W=lasagne.init.GlorotUniform())
+    # Expert note: Lasagne provides alternative convolutional layers that
+    # override Theano's choice of which implementation to use; for details
+    # please see http://lasagne.readthedocs.org/en/latest/user/tutorial.html.
+
+    # Max-pooling layer of factor 2 in both dimensions:
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+    # Another convolution with 32 5x5 kernels, and another 2x2 pooling:
+    network = lasagne.layers.Conv2DLayer(
+            network, num_filters=32, filter_size=(5, 5),
+            nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+    # A fully-connected layer of 256 units with 50% dropout on its inputs:
+    network = lasagne.layers.DenseLayer(
+            lasagne.layers.dropout(network, p=.5),
+            num_units=256,
+            nonlinearity=lasagne.nonlinearities.rectify)
+
+    # And, finally, the 10-unit output layer with 50% dropout on its inputs:
+    network = lasagne.layers.DenseLayer(
+            lasagne.layers.dropout(network, p=.5),
+            num_units=10,
+            nonlinearity=lasagne.nonlinearities.softmax)
+
+    return network
