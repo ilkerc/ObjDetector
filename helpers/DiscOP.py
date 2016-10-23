@@ -9,8 +9,8 @@ class DiscOP(theano.Op):
     """
     __props__ = ()
 
-    itypes = [theano.tensor.dmatrix, theano.tensor.dmatrix]
-    otypes = [theano.tensor.dmatrix]
+    itypes = [theano.tensor.fmatrix, theano.tensor.fmatrix]
+    otypes = [theano.tensor.fmatrix]
 
     def perform(self, node, inputs, output_storage):
         # Input & output storage settings
