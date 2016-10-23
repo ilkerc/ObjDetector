@@ -1,9 +1,6 @@
 import numpy as np
 from matplotlib.pyplot import gca
-from skimage import transform as tf
 from ImageAugmenter import ImageAugmenter
-from sklearn.preprocessing import scale, minmax_scale
-from skimage.exposure import rescale_intensity
 
 
 class Augmentor(object):

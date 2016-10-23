@@ -3,7 +3,7 @@ import theano.tensor as T
 import matplotlib.pyplot as plt
 from scipy.misc import imread as imread
 import lasagne
-import nolearn.lasagne.visualize
+#import nolearn.lasagne.visualize
 from itertools import product
 from skimage import transform as tf
 
@@ -71,12 +71,12 @@ def test_eval(eval_func, ass, shape, show_all=False):
 
 
 # Draws graphical representation of the network, layer-by-layer
-def show_network(network):
-    nolearn.lasagne.visualize.draw_to_file(lasagne.layers.get_all_layers(network),
-                                           'network.png')
-    img = imread('network.png')
-    plt.figure()
-    plt.imshow(img)
+#def show_network(network):
+#    nolearn.lasagne.visualize.draw_to_file(lasagne.layers.get_all_layers(network),
+#                                           'network.png')
+#    img = imread('network.png')
+#    plt.figure()
+#    plt.imshow(img)
 
 
 # Given test function, calculates the loss and notes down

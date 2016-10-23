@@ -7,11 +7,11 @@ import theano.tensor as T
 from scipy import misc
 
 from Models import build_st_network, build_cnnae_network, build_st_spline_network, build_cnnae_network_2conv
-from utils.Augmentor import Augmentor
-from utils.theano_utils import ssim, compute_reconstruction_error
-from utils.utils import iterate_minibatches, test_histogram, \
+from helpers.Augmentor import Augmentor
+from helpers.theano_utils import ssim, compute_reconstruction_error
+from helpers.utils import iterate_minibatches, test_histogram, \
     rescaler, train_test_splitter
-
+theano.config.exception_verbosity = 'high'
 #matplotlib.use('TkAgg')
 
 # Constants
@@ -39,7 +39,7 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     if model == 'cnn':
         network = build_cnnae_network(Xtr.shape)
     elif model == 'st':
-        network = build_st_network(batch_size, Xtr.shape)
+        network = build_st_network(batch_size, Xtr.shape, withdisc=True)
     elif model == 'st_sp':
         network = build_st_spline_network(Xtr.shape)
     elif model == 'cnn2':
@@ -56,13 +56,11 @@ def train_network(x_data, y_data, num_epochs=100, batch_size=BATCH_SIZE, model='
     Y = T.matrix('targets', dtype=theano.config.floatX)
 
     # Train Functions
-    output = lasagne.layers.get_output(network, X, deterministic=False, withdiscrete=True)
-    output_cont = lasagne.layers.get_output(network, X, deterministic=False, withdiscrete=False)
+    output = lasagne.layers.get_output(network, X, deterministic=False)
     cost = T.mean(lasagne.objectives.squared_error(output, Y)) + ssim(output, Y)
-    cost_cont = T.mean(lasagne.objectives.squared_error(output_cont, Y)) + ssim(output_cont, Y)
     updates = lasagne.updates.nesterov_momentum(
-        cost_cont, params, learning_rate=0.01, momentum=0.9)
-    if model == 'stx':
+        cost, params, learning_rate=0.01, momentum=0.9)
+    if model == 'st':
         l_paramreg = next(l for l in lasagne.layers.get_all_layers(network) if l.name is 'param_regressor')
         l_paramreg_params = lasagne.layers.get_output(l_paramreg, X, deterministic=False)
         l_param_W = l_paramreg.get_params()[0]
@@ -158,10 +156,10 @@ a = Augmentor(selected_callback,
               img_data=img,
               window_size=WINDOW_SIZE,
               scale_to_percent=1.2,
-              rotation_deg=(0, 360),
-              shear_deg=(-20, 20),
-              translation_x_px=5,
-              translation_y_px=5,
+              rotation_deg=(0, 60),
+              shear_deg=(-5, 5),
+              translation_x_px=2,
+              translation_y_px=2,
               transform_channels_equally=True
               )
 root_key = 'leye'

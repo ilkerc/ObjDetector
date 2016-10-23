@@ -1,4 +1,4 @@
-from utils.utils import iterate_minibatches
+from helpers.utils import iterate_minibatches
 from Models import build_mitosis_encoder
 from sampleFactory import generateSamples
 import lasagne

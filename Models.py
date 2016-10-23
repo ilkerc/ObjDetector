@@ -1,11 +1,10 @@
 import numpy as np
 import theano
 import lasagne
-from helpers.DiscreteLayer import DiscreteLayer
-import theano.tensor as T
-from lasagne import layers
+from DiscreteLayer import DiscreteLayer
+from lasagne.init import Constant
 from lasagne.layers import ReshapeLayer, DenseLayer, InputLayer, \
-    TransformerLayer, ScaleLayer, Upscale2DLayer, TransposedConv2DLayer, \
+    TransformerLayer, Upscale2DLayer, TransposedConv2DLayer, \
     DropoutLayer, TPSTransformerLayer
 
 try:
@@ -220,11 +219,7 @@ def build_cnnae_network_2conv(input_shape):
 
 # input_shape = (size, channel, width, height)
 
-def build_st_network(b_size, bins_choose, input_shape):
-    #
-    #bins_choose = np.linspace(-1, 1, 10)
-    t_size = b_size*6
-    bins = np.tile(bins_choose, t_size).reshape((t_size, -1))
+def build_st_network(b_size, input_shape, withdisc=True):
     # General Params
     num_filters = 64
     filter_size = (3, 3)
@@ -267,7 +262,10 @@ def build_st_network(b_size, bins_choose, input_shape):
                              W=lasagne.init.Constant(0.0),
                              name='param_regressor')
 
-    l_dis = DiscreteLayer(l_param_reg, bins=bins)
+    if withdisc:
+        l_dis = DiscreteLayer(l_param_reg, start=Constant(-3.), stop=Constant(3.), linrange=Constant(50.))
+    else:
+        l_dis = l_param_reg
 
     # Transformer Network
     l_trans = TransformerLayer(l_in,
