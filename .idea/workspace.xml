@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d41e7d69-b290-4668-9eef-36f831989cda" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DiscreteLayer.py" afterPath="$PROJECT_DIR$/DiscreteLayer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Models.py" afterPath="$PROJECT_DIR$/Models.py" />
     </list>
     <ignored path="ObjDetector.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -715,7 +713,14 @@
       <option name="project" value="LOCAL" />
       <updated>1477239466488</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Parameters options for layer">
+      <created>1477240895118</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1477240895118</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -764,7 +769,8 @@
     <MESSAGE value="DiscOP Added" />
     <MESSAGE value="Notebook updated for test" />
     <MESSAGE value="DiscOp added" />
-    <option name="LAST_COMMIT_MESSAGE" value="DiscOp added" />
+    <MESSAGE value="Parameters options for layer" />
+    <option name="LAST_COMMIT_MESSAGE" value="Parameters options for layer" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
