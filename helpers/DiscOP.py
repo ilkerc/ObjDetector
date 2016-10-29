@@ -74,7 +74,7 @@ class DiscOP(theano.Op):
 
         new_theta = np.squeeze(np.dstack([new_t1, new_t2, new_t3, new_t4, new_t5, new_t6]))
 
-        return new_theta.astype(theano.config.floatX)
+        return new_theta.astype('float32')
 
 if __name__ == "__main__":
     theano.config.exception_verbosity = 'high'
