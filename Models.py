@@ -333,7 +333,7 @@ def build_cnnae_network(input_shape):
     return l_output
 
 
-def build_st_network_MNIST(input_shape, discinits, disctrainables, withdisc=True):
+def build_st_network_MNIST(input_shape,  mins, maxs, ranges, withdisc=True):
     # General Params
     num_filters = 64
     filter_size = (3, 3)
@@ -377,7 +377,7 @@ def build_st_network_MNIST(input_shape, discinits, disctrainables, withdisc=True
                              name='param_regressor')
 
     if withdisc:
-        l_dis = DiscreteLayer(l_param_reg, discinits, disctrainables)
+        l_dis = DiscreteLayer(l_param_reg, mins, maxs, ranges)
     else:
         l_dis = l_param_reg
 
