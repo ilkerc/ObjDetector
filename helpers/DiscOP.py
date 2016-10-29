@@ -9,8 +9,8 @@ class DiscOP(theano.Op):
     """
     __props__ = ("mins", "maxs", "ranges")
 
-    itypes = [theano.tensor.dmatrix]
-    otypes = [theano.tensor.dmatrix]
+    itypes = [theano.tensor.fmatrix]
+    otypes = [theano.tensor.fmatrix]
 
     def __init__(self, mins, maxs, ranges):
         self.mins = mins
@@ -74,7 +74,7 @@ class DiscOP(theano.Op):
 
         new_theta = np.squeeze(np.dstack([new_t1, new_t2, new_t3, new_t4, new_t5, new_t6]))
 
-        return new_theta
+        return new_theta.astype(theano.config.floatX)
 
 if __name__ == "__main__":
     theano.config.exception_verbosity = 'high'
