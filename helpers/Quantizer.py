@@ -7,7 +7,7 @@ class Quantizer(theano.Op):
     """
     This creates an Op that takes x to a*x+b.
     """
-    __props__ = ("mins", "maxs", "ranges")
+    __props__ = ("quants")
 
     itypes = [theano.tensor.fmatrix]
     otypes = [theano.tensor.fmatrix]
