@@ -44,4 +44,4 @@ if __name__ == "__main__":
     y1 = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
     x1 = np.random.rand(3, 6)
 
-    print f(x1, y1)
+    print op(x1, y1)
