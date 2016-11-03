@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="d41e7d69-b290-4668-9eef-36f831989cda" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helpers/Quantizer.py" afterPath="$PROJECT_DIR$/helpers/Quantizer.py" />
     </list>
     <ignored path="ObjDetector.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,7 +55,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DiscreteLayer.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="DiscreteLayer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DiscreteLayer.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="105">
@@ -78,11 +79,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Quantizer.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Quantizer.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/helpers/Quantizer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="472">
-              <caret line="46" column="13" selection-start-line="46" selection-start-column="13" selection-end-line="46" selection-end-column="13" />
+            <state relative-caret-position="277">
+              <caret line="33" column="47" selection-start-line="33" selection-start-column="47" selection-end-line="33" selection-end-column="47" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -130,8 +131,8 @@
         <option value="$PROJECT_DIR$/testopp.py" />
         <option value="$PROJECT_DIR$/top.py" />
         <option value="$PROJECT_DIR$/TrainerTester.py" />
-        <option value="$PROJECT_DIR$/helpers/Quantizer.py" />
         <option value="$PROJECT_DIR$/DiscreteLayer.py" />
+        <option value="$PROJECT_DIR$/helpers/Quantizer.py" />
       </list>
     </option>
   </component>
@@ -950,7 +951,14 @@
       <option name="project" value="LOCAL" />
       <updated>1478210763565</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Parameters options for layer">
+      <created>1478210767420</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1478210767420</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -1223,16 +1231,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/helpers/Quantizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="472">
-          <caret line="46" column="13" selection-start-line="46" selection-start-column="13" selection-end-line="46" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/envs/theano/lib/python2.7/site-packages/lasagne/utils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="392">
@@ -1265,6 +1263,16 @@
           <caret line="7" column="0" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/helpers/Quantizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="33" column="47" selection-start-line="33" selection-start-column="47" selection-end-line="33" selection-end-column="47" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
