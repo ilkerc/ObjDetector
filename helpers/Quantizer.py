@@ -22,7 +22,7 @@ class Quantizer(theano.Op):
         out = output_storage[0]
 
         # Calculation
-        new_theta = self.quant * T.floor((x/self.quant) + .5)
+        new_theta = self.quants * T.floor((x/self.quants) + .5)
 
         # Output Setting
         out[0] = new_theta
