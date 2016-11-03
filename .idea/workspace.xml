@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d41e7d69-b290-4668-9eef-36f831989cda" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DiscreteLayer.py" afterPath="$PROJECT_DIR$/DiscreteLayer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helpers/Quantizer.py" afterPath="$PROJECT_DIR$/helpers/Quantizer.py" />
     </list>
     <ignored path="ObjDetector.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -945,7 +943,14 @@
       <option name="project" value="LOCAL" />
       <updated>1478210100681</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Parameters options for layer">
+      <created>1478210763565</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1478210763565</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="ToolWindowManager">
