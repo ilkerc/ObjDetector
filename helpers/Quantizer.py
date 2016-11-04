@@ -16,7 +16,7 @@ class Quantizer(theano.Op):
     def __init__(self, addnoise=True):
         self.srng = RandomStreams()
         self.addnoise = addnoise
-        self.rv_n = self.srng.normal((1, ))
+        self.rv_n = self.srng.normal((6, ))
         super(Quantizer, self).__init__()
 
     def perform(self, node, inputs, output_storage):
@@ -30,7 +30,7 @@ class Quantizer(theano.Op):
             #new_theta = y * np.floor((x/y) + (.5 + self.rv_n.eval()))
             # Add a noise of 20% of bin width and times random,
             # But this operation seems like wasting the discretisation operation ??
-            noise = ((y * 0.2) * self.srng.normal((6, ))).eval()
+            noise = (y * 0.2) * self.rv_n.eval()
             new_theta = y * np.floor((x/y) + .5) + noise
 
         else:
