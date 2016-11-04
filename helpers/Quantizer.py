@@ -30,7 +30,7 @@ class Quantizer(theano.Op):
 
         # Add random noisy factor y/5 * random vector
         if self.addnoise:
-            new_theta += (y / .2) * self.rv_n.eval()
+            new_theta += (y * .2) * self.rv_n.eval()
 
         # Output Setting
         out[0] = new_theta
