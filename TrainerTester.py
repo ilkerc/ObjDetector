@@ -172,6 +172,7 @@ evl_func, trn_func, tst_func, recon_func, ntwrk, train_hist, bias_hst, theta_hst
                                                                             batch_size=1,
                                                                             model='st',
                                                                             shift_target=False)
+plt.hist
 """
 # Plotter For test
 for key, val in coords.items():

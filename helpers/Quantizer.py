@@ -27,10 +27,8 @@ class Quantizer(theano.Op):
 
         # Calculation
         if self.addnoise:
-
             x_noise = x + ((x * .05) * (self.rv_n.eval() - .5))
             new_theta = y * np.floor((x_noise/y) + .5)
-
         else:
             new_theta = y * np.floor((x/y) + .5)
 
@@ -39,7 +37,9 @@ class Quantizer(theano.Op):
     # TODO: Investigate Output Gradients,
     # TODO: If we decide to include ranges as learning parameters, hereby we need to define their gradients
     def grad(self, inputs, output_grads):
-        return [output_grads[0], output_grads[0]]
+        theta, quant = inputs
+        # Quantizers gradients are zero ?
+        return [output_grads[0], T.zeros_like(quant)]
 
 if __name__ == "__main__":
     theano.config.exception_verbosity = 'high'
@@ -47,9 +47,9 @@ if __name__ == "__main__":
 
     x = theano.tensor.fmatrix()
     y = theano.tensor.fvector()
-    f = theano.function([x, y], [op(x, y), T.grad(T.constant(1.1), x)], mode='DebugMode', allow_input_downcast=True)
+    f = theano.function([x, y], [op(x, y)], mode='DebugMode', allow_input_downcast=True)
 
-    y1 = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
-    x1 = np.random.rand(3, 6)
+    y1 = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1], dtype='float32')
+    x1 = np.random.rand(3, 6).astype('float32')
 
-    print op(x1, y1)
+    print f(x1, y1)
