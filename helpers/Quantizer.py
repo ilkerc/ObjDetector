@@ -27,11 +27,9 @@ class Quantizer(theano.Op):
 
         # Calculation
         if self.addnoise:
-            #new_theta = y * np.floor((x/y) + (.5 + self.rv_n.eval()))
-            # Add a noise of 20% of bin width and times random,
-            # But this operation seems like wasting the discretisation operation ?
-            noise = (y * 0.2) * self.rv_n.eval()
-            new_theta = y * np.floor((x/y) + .5) + noise
+
+            x_noise = x + ((x * 0.2) * self.rv_n.eval())
+            new_theta = y * np.floor((x_noise/y) + .5)
 
         else:
             new_theta = y * np.floor((x/y) + .5)
