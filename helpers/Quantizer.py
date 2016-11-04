@@ -16,7 +16,7 @@ class Quantizer(theano.Op):
     def __init__(self, addnoise=True):
         self.srng = RandomStreams()
         self.addnoise = addnoise
-        self.rv_n = self.srng.normal((6, ))
+        self.rv_n = self.srng.uniform((6, ))
         super(Quantizer, self).__init__()
 
     def perform(self, node, inputs, output_storage):
@@ -28,7 +28,7 @@ class Quantizer(theano.Op):
         # Calculation
         if self.addnoise:
 
-            x_noise = x + ((x * 0.2) * self.rv_n.eval())
+            x_noise = x + ((x * 0.1) * self.rv_n.eval())
             new_theta = y * np.floor((x_noise/y) + .5)
 
         else:
