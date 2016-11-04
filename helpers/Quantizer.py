@@ -28,7 +28,7 @@ class Quantizer(theano.Op):
         # Calculation
         if self.addnoise:
 
-            x_noise = x + ((x * 0.2) * (self.rv_n.eval() - .5))
+            x_noise = x + ((x * .05) * (self.rv_n.eval() - .5))
             new_theta = y * np.floor((x_noise/y) + .5)
 
         else:
