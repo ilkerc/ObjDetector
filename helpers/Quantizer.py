@@ -39,7 +39,7 @@ class Quantizer(theano.Op):
     def grad(self, inputs, output_grads):
         theta, quant = inputs
         # Quantizers gradients are zero ?
-        return [output_grads[0], T.zeros_like(quant)]
+        return [output_grads[0], T.ones_like(quant)]
 
 if __name__ == "__main__":
     theano.config.exception_verbosity = 'high'
