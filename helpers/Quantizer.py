@@ -30,10 +30,11 @@ class Quantizer(theano.Op):
 
         # Add random noisy factor y/5 * random vector
         if self.addnoise:
-            new_theta += (y * .2) * self.rv_n.eval()
-
+            noise = (y * .2) * self.rv_n.eval()
+            out[0] = new_theta + noise
+        else:
+            out[0] = new_theta
         # Output Setting
-        out[0] = new_theta
 
     # TODO: Investigate Output Gradients,
     # TODO: If we decide to include ranges as learning parameters, hereby we need to define their gradients
