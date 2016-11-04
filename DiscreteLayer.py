@@ -10,7 +10,7 @@ class DiscreteLayer(Layer):
         super(DiscreteLayer, self).__init__(incoming, **kwargs)
         self.quant = quant # self.add_param(quant, quant.shape, name='quant', trainable=False)
         #self.op = DiscOP(mins=mins, maxs=maxs, ranges=ranges)
-        self.op = Quantizer()
+        self.op = Quantizer(addnoise=True)
 
     def get_output_for(self, inputs, **kwargs):
         theta = inputs

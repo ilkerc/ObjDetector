@@ -13,9 +13,10 @@ class Quantizer(theano.Op):
     itypes = [theano.tensor.fmatrix, theano.tensor.fvector]
     otypes = [theano.tensor.fmatrix]
 
-    def __init__(self):
+    def __init__(self, addnoise=True):
         self.srng = RandomStreams()
-        self.rv_n = self.srng.normal(6)
+        self.addnoise = addnoise
+        self.rv_n = self.srng.normal((6, 1))
         super(Quantizer, self).__init__()
 
     def perform(self, node, inputs, output_storage):
@@ -28,10 +29,11 @@ class Quantizer(theano.Op):
         new_theta = y * np.floor((x/y) + .5)
 
         # Add random noisy factor y/5 * random vector
-        noise = (y / .2) * self.rv_n
+        if self.addnoise:
+            new_theta += (y / .2) * self.rv_n.eval()
 
         # Output Setting
-        out[0] = new_theta + noise
+        out[0] = new_theta
 
     # TODO: Investigate Output Gradients,
     # TODO: If we decide to include ranges as learning parameters, hereby we need to define their gradients
