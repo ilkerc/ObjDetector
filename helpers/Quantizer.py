@@ -1,6 +1,7 @@
 import theano
 import theano.tensor as T
 import numpy as np
+from theano.tensor.shared_randomstreams import RandomStreams
 
 
 class Quantizer(theano.Op):
@@ -12,9 +13,10 @@ class Quantizer(theano.Op):
     itypes = [theano.tensor.fmatrix, theano.tensor.fvector]
     otypes = [theano.tensor.fmatrix]
 
-    # def __init__(self, quants):
-    #    self.quants = quants
-    #    super(Quantizer, self).__init__()
+    def __init__(self):
+        self.srng = RandomStreams()
+        self.rv_n = self.srng.normal(6)
+        super(Quantizer, self).__init__()
 
     def perform(self, node, inputs, output_storage):
         # Input & output storage settings
@@ -25,8 +27,11 @@ class Quantizer(theano.Op):
         # Calculation
         new_theta = y * np.floor((x/y) + .5)
 
+        # Add random noisy factor y/5 * random vector
+        noise = (y / .2) * self.rv_n
+
         # Output Setting
-        out[0] = new_theta
+        out[0] = new_theta + noise
 
     # TODO: Investigate Output Gradients,
     # TODO: If we decide to include ranges as learning parameters, hereby we need to define their gradients
@@ -39,7 +44,7 @@ if __name__ == "__main__":
 
     x = theano.tensor.fmatrix()
     y = theano.tensor.fvector()
-    f = theano.function([x, y], op(x, y), mode='DebugMode', allow_input_downcast=True)
+    f = theano.function([x, y], [op(x, y), T.grad(T.constant(1.1), x)], mode='DebugMode', allow_input_downcast=True)
 
     y1 = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
     x1 = np.random.rand(3, 6)
