@@ -6,11 +6,11 @@ import theano.tensor as T
 
 class DiscreteLayer(Layer):
 
-    def __init__(self, incoming, mins, maxs, ranges, quant, **kwargs):
+    def __init__(self, incoming, mins, maxs, ranges, quant, addNoise=True, **kwargs):
         super(DiscreteLayer, self).__init__(incoming, **kwargs)
-        self.quant = quant # self.add_param(quant, quant.shape, name='quant', trainable=False)
+        self.quant = self.add_param(quant, quant.shape, name='quant', trainable=False)
         #self.op = DiscOP(mins=mins, maxs=maxs, ranges=ranges)
-        self.op = Quantizer(addnoise=True)
+        self.op = Quantizer(addnoise=addNoise)
 
     def get_output_for(self, inputs, **kwargs):
         theta = inputs
