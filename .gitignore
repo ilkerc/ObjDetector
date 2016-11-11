@@ -10,3 +10,4 @@
 .DS_Store
 *.py~
 ._.DS_Store
+*.model
