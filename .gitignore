@@ -1,7 +1,12 @@
 .idea/*
+.idea/
 *.jpg
 *.png
 *.npz
 *.pyc
 *.zip
+.ipynb_checkpoints/*
 .ipynb_checkpoints/
+.DS_Store
+*.py~
+._.DS_Store
