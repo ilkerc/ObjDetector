@@ -13,10 +13,11 @@ class Quantizer(theano.Op):
     itypes = [theano.tensor.fmatrix, theano.tensor.fvector]
     otypes = [theano.tensor.fmatrix]
 
-    def __init__(self, addnoise=True):
+    def __init__(self, addnoise=True, eps=0.00001):
         self.srng = RandomStreams()
         self.addnoise = addnoise
         self.rv_n = self.srng.uniform((6, ))
+        self.eps = eps
         super(Quantizer, self).__init__()
 
     def perform(self, node, inputs, output_storage):
@@ -25,14 +26,50 @@ class Quantizer(theano.Op):
         y = inputs[1]
         out = output_storage[0]
 
-        # Calculation
-        if self.addnoise:
-            x_noise = x + ((x * .05) * (self.rv_n.eval() - .5))
-            new_theta = y * np.floor((x_noise/y) + .5)
-        else:
-            new_theta = y * np.floor((x/y) + .5)
+        new_theta = self.newQuantizer(inputs=x, quantizers=y)
 
         out[0] = new_theta
+
+        # Calculation
+        # if self.addnoise:
+        #     x_noise = x + ((x * .05) * (self.rv_n.eval() - .5))
+        #    new_theta = y * np.floor((x_noise/y) + .5)
+        # else:
+        #    new_theta = y * np.floor((x/y) + .5)
+        #
+        # out[0] = new_theta
+
+
+    def newQuantizer(self, inputs, quantizers):
+        shape = inputs.shape
+        outputs = np.zeros(shape=shape, dtype=theano.config.floatX)
+
+        # Theta Iterator
+        for i in range(shape[1]):
+            theta_i = inputs[:, i]
+
+            # Batch Iterator
+            for j in range(shape[0]):
+                theta = theta_i[j]
+
+                # Theta Optimizer
+                q = quantizers[i]
+                x_i = theta
+                x_o = self.Qnt(x_i, q)
+
+                # Optimizer
+                while(np.abs(x_o - x_i) > self.eps):
+                    q = q / 2.0
+                    x_o = self.Qnt(x_i, q)
+
+                # End of Optimisation
+                outputs[j, i] = x_o
+
+        return outputs
+
+
+    def Qnt(self, x, y):
+        return y * np.floor((x/y) + .5)
 
     # TODO: Investigate Output Gradients,
     # TODO: If we decide to include ranges as learning parameters, hereby we need to define their gradients
