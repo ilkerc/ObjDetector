@@ -2,7 +2,7 @@ import theano
 import theano.tensor as T
 import numpy as np
 from theano.tensor.shared_randomstreams import RandomStreams
-
+from sklearn.metrics.pairwise import pairwise_distances
 
 class Quantizer(theano.Op):
     """
@@ -38,6 +38,33 @@ class Quantizer(theano.Op):
         #    new_theta = y * np.floor((x/y) + .5)
         #
         # out[0] = new_theta
+
+    """
+    selectedBins -> Unique bins
+    inputs -> (-1, 6) shaped theta inputs, first dimension is batch
+    """
+    def quantizeWithBins(self, theta, selectedBins):
+        # import ipdb; ipdb.set_trace()
+        shape = theta.shape
+        theta_prime = np.zeros(shape=shape)
+
+        for i in range(shape[1]):
+            # Get Variables
+            bins = np.expand_dims(selectedBins[i], axis=0)
+            theta_i = np.expand_dims(theta[:, i], axis=0)
+
+            # Calculate distance
+            dists = pairwise_distances(bins.T, theta_i.T)
+
+            # Find minimum indexses and set new theta from the bins
+            mins = np.argmin(dists, axis=0)
+            theta_prime_i = bins.flatten()[mins]
+
+            # Set new theta array
+            theta_prime[:, i] = theta_prime_i
+
+        # return Theta'
+        return theta_prime
 
 
     def newQuantizer(self, inputs, quantizers):
